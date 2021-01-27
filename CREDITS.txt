@@ -6,3 +6,4 @@ Name idea:
 
 Sprites:
 - Teleport fog is from Doom (no shit) by id Software. Recolor by Accensus.
+- Pickup sprite taken from Trailblazer. Probably done by PillowerBlaster or DoomNukem. Or both.
