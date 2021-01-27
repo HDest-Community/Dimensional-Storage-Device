@@ -1,0 +1,675 @@
+version "4.5"
+
+class DSDHandler : StaticEventHandler
+{
+	override void CheckReplacement(ReplaceEvent e)
+	{
+		if (!e.Replacement)
+		{
+			return;
+		}
+
+		switch (e.Replacement.GetClassName())
+		{
+			case 'WildBackpack':
+				if (random[arcanrand]() <= 8)
+				{
+					e.Replacement = "DSDInterface";
+				}
+				break;
+		}
+	}
+}
+
+class DSDStorageItem play
+{
+	Inventory InvRef;
+	class<Inventory> ItemClass;
+	string NiceName;
+	string Icon;
+	Array<double> Bulks;
+	Array<int> Amounts; // [Ace] Only one element (index 0) is used for singular items.
+	Array<int> WeaponStatus; // [Ace] Every HDWEP_STATUSSLOTS starts a new weapon.
+
+	clearscope int GetBulk()
+	{
+		int Total = 0;
+		for (int i = 0; i < Bulks.Size(); ++i)
+		{
+			Total += Bulks[i];
+		}
+		return Total;
+	}
+}
+
+class DSDStorage : Thinker
+{
+	static DSDStorage Get(int num)
+	{
+		ThinkerIterator it = ThinkerIterator.Create('DSDStorage', STAT_STATIC);
+		DSDStorage Storage;
+		while ((Storage = DSDStorage(it.Next())))
+		{
+			if (Storage.TrackedPlayer == num)
+			{
+				return Storage;
+			}
+		}
+
+		// [Ace] Create a new one if none exist.
+		Storage = new('DSDStorage');
+		Storage.ChangeStatNum(STAT_STATIC);
+		Storage.TrackedPlayer = num;
+		return Storage;
+	}
+
+	clearscope int CheckConditions(HDWeapon wpn, HDArmour arm, HDMagAmmo mag, HDPickup pkp)
+	{
+		// [Ace] Easily extendable if more conditions need to be added later on.
+		if (wpn && wpn.RefId != "" && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON)
+		{
+			return 1;
+		}
+		else if (arm)
+		{
+			return 2;
+		}
+		else if (mag)
+		{
+			return 3;
+		}
+		else if (pkp && !pkp.bNOINTERACTION && pkp.bFITSINBACKPACK)
+		{
+			return 4;
+		}
+
+		return 0;
+	}
+
+	DSDStorageItem Find(class<Inventory> item)
+	{
+		for (int i = 0; i < Items.Size(); ++i)
+		{
+			if (Items[i].ItemClass == item)
+			{
+				return Items[i];
+			}
+		}
+
+		return null;
+	}
+
+	void PrevItem()
+	{
+		SelItemIndex--;
+		if (SelItemIndex < 0)
+		{
+			SelItemIndex = Items.Size() - 1;
+		}
+	}
+
+	void NextItem()
+	{
+		SelItemIndex++;
+		if (SelItemIndex >= Items.Size())
+		{
+			SelItemIndex = 0;
+		}
+	}
+
+	void ClampIndex()
+	{
+		SelItemIndex = clamp(SelItemIndex, 0, max(0, Items.Size() - 1));
+	}
+
+	clearscope DSDStorageItem GetSelectedItem()
+	{
+		if (Items.Size() > 0)
+		{
+			return Items[SelItemIndex];
+		}
+
+		return null;
+	}
+
+	// [Ace] noInsert means the item is only added temporarily and will be removed the next time RemoveEmpty is called.
+	// Assuming you also don't have the item on you. That argument is used to populate the list with all items that are potentially backpackable.
+	void TryInsertItem(Inventory item, bool noInsert, int amt = 1)
+	{
+		if (!item)
+		{
+			return;
+		}
+
+		let wpn = HDWeapon(item);
+		let arm = HDArmour(item);
+		let mag = HDMagAmmo(item);
+		let pkp = HDPickup(item);
+		let plr = players[TrackedPlayer].mo;
+		
+		int Type = CheckConditions(wpn, arm, mag, pkp);
+		if (Type == 0)
+		{
+			return;
+		}
+
+		DSDStorageItem di = Find(item.GetClass());
+		if (!di)
+		{
+			di = new('DSDStorageItem');
+			Items.Push(di);
+		}
+
+		di.ItemClass = item.GetClass();
+		di.NiceName = item.GetTag();
+		di.Icon = TexMan.GetName(item.Icon);
+		di.InvRef = item;
+		switch (Type)
+		{
+			case 1:
+				di.Icon = wpn.GetPickupSprite();
+				break;
+			case 2:
+				di.Icon = arm.CheckMega() ? "ARMCA0" : "ARMSA0";
+				break;
+			case 3:
+				di.Icon = mag.GetMagSprite(mag.MaxPerUnit);
+				break;
+		}
+
+		if (noInsert)
+		{
+			return;
+		}
+
+		switch (Type)
+		{
+			case 1:
+				double WpnBulk = wpn.WeaponBulk();
+				if (TotalBulk + WpnBulk >= MaxBulk)
+				{
+					plr.A_Log("Storage is too full.", true);
+					break;
+				}
+				di.Bulks.Push(wpn.WeaponBulk());
+				di.Amounts.Resize(1);
+				di.Amounts[0]++;
+				for (int i = 0; i < HDWEP_STATUSSLOTS; ++i)
+				{
+					di.WeaponStatus.Push(wpn.WeaponStatus[i]);
+				}
+				if (wpn.owner)
+				{
+					let plr = wpn.owner;
+					wpn = HDWeapon(wpn.owner.DropInventory(wpn));
+					di.InvRef = plr.FindInventory(wpn.GetClass()); // [Ace] Set the reference to the next weapon in your inventory.
+					wpn.Amount--;
+					if (wpn.Amount == 0)
+					{
+						wpn.Destroy();
+					}
+				}
+				break;
+
+			case 2:
+				double ArmBulk = arm.CheckMega() ? ENC_BATTLEARMOUR : ENC_GARRISONARMOUR;
+				if (TotalBulk + ArmBulk >= MaxBulk)
+				{
+					plr.A_Log("Storage is too full.", true);
+					break;
+				}
+				di.Bulks.Push(ArmBulk);
+				di.Amounts.Push(arm.TakeMag(false));
+				if (arm.Amount == 0)
+				{
+					arm.Destroy();
+				}
+				break;
+
+			case 3:
+				int MagCount = mag.Mags.Size();
+				for (int i = 0; i < min(amt, MagCount); ++i)
+				{
+					double MagBulk = mag.MagBulk + mag.RoundBulk * (mag.Mags.Size() ? mag.Mags[mag.Mags.Size() - 1] : mag.MaxPerUnit);
+					if (TotalBulk + MagBulk >= MaxBulk)
+					{
+						plr.A_Log("Storage is too full.", true);
+						break;
+					}
+					di.Bulks.Push(MagBulk);
+					di.Amounts.Push(mag.TakeMag(false));
+					if (mag.Amount == 0)
+					{
+						mag.Destroy();
+						break;
+					}
+				}
+				break;
+			case 4:
+				int PickupCount = pkp.Amount;
+				for (int i = 0; i < min(amt, PickupCount); ++i)
+				{
+					if (di.Amounts.Size() > 0 && di.Amounts[0] >= pkp.MaxAmount)
+					{
+						plr.A_Log("Cannot insert more of that item.", true);
+						break;
+					}
+					if (TotalBulk + pkp.Bulk >= MaxBulk)
+					{
+						plr.A_Log("Storage is too full.", true);
+						break;
+					}
+					di.Bulks.Push(pkp.Bulk);
+					di.Amounts.Resize(1);
+					di.Amounts[0]++;
+					pkp.Amount--;
+					if (pkp.Amount == 0)
+					{
+						pkp.Destroy();
+						break;
+					}
+				}
+				break;
+		}
+
+		ClampIndex();
+		CalculateBulk();
+	}
+
+	void RemoveItem(DSDStorageItem item, int amt = 1)
+	{
+		let wpn = (class<HDWeapon>)(item.ItemClass);
+		let mag = (class<HDMagAmmo>)(item.ItemClass);
+		let pkp = (class<HDPickup>)(item.ItemClass);
+		let plr = players[TrackedPlayer].mo;
+
+		if (!plr || item.Amounts.Size() == 0)
+		{
+			return;
+		}
+
+		double SpawnHeight = plr.height / 2 + 6;
+		vector3 SpawnPos = plr.Vec3Angle(64, plr.angle, SpawnHeight);
+		if (wpn)
+		{
+			Actor.Spawn("DSDSpawnEffect", SpawnPos);
+			HDWeapon newwpn = HDWeapon(Actor.Spawn(wpn, SpawnPos));
+			newwpn.A_ChangeVelocity(0, 0, frandom(0, 2), CVF_RELATIVE);
+			for (int i = HDWEP_STATUSSLOTS - 1; i >= 0; --i)
+			{
+				int StartIndex = HDWEP_STATUSSLOTS * (item.Amounts[0] - 1) + i;
+				newwpn.WeaponStatus[i] = item.WeaponStatus[StartIndex];
+			}
+			item.WeaponStatus.Delete(HDWEP_STATUSSLOTS * (item.Amounts[0] - 1), HDWEP_STATUSSLOTS);
+			item.Bulks.Pop();
+			item.Amounts[0]--;
+			if (item.Amounts[0] == 0)
+			{
+				item.Amounts.Pop();
+			}
+		}
+		else if (mag) // [Ace] Same shite.
+		{
+			Actor.Spawn("DSDSpawnEffect", SpawnPos);
+			int MagAmt = item.Amounts.Size();
+			for (int i = 0; i < min(amt, MagAmt); ++i)
+			{
+				HDMagAmmo newmag = HDMagAmmo(Actor.Spawn(mag, SpawnPos));
+				newmag.angle = random(0, 359);
+				newmag.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
+				int MagAmt = item.Amounts[item.Amounts.Size() - 1];
+				if (newmag is 'HDArmour')
+				{
+					newmag.Mags[0] = MagAmt;
+				}
+				else
+				{
+					newmag.Mags.Push(MagAmt);
+				}
+				item.Bulks.Pop();
+				item.Amounts.Pop();
+			}
+		}
+		else if (pkp)
+		{
+			Actor.Spawn("DSDSpawnEffect", SpawnPos);
+			HDPickup newpkp = HDPickup(Actor.Spawn(pkp, SpawnPos));
+			newpkp.A_ChangeVelocity(0, 0, frandom(0, 2), CVF_RELATIVE);
+			amt = min(amt, item.Amounts[0]);
+			newpkp.Amount = amt;
+			item.Bulks.Pop();
+			item.Amounts[0] -= amt;
+			if (item.Amounts[0] == 0)
+			{
+				item.Amounts.Pop();
+			}
+		}
+
+		RemoveEmpty();
+		ClampIndex();
+		CalculateBulk();
+	}
+
+	private void CalculateBulk()
+    {
+        TotalBulk = 0;
+        for (int i = 0; i < Items.Size(); ++i)
+        {
+            TotalBulk += Items[i].GetBulk();
+        }
+    }
+
+	void RemoveEmpty()
+	{
+		let plr = players[TrackedPlayer].mo;
+		for (int i = 0; i < Items.Size();)
+		{
+			if (Items[i].Amounts.Size() == 0 && !plr.FindInventory(Items[i].ItemClass))
+			{
+				Items[i].Destroy();
+				Items.Delete(i);
+				continue;
+			}
+			i++;
+		}
+	}
+
+	double TotalBulk;
+	int TrackedPlayer;
+	int SelItemIndex;
+	Array<DSDStorageItem> Items;
+
+	const MaxBulk = 10000;
+}
+
+// [Ace] I'm not using any of the backpack stuff. Everything is my own implementation.
+// The real magic is upstairs.
+class DSDInterface : HDWeapon
+{
+	enum DSDProperties
+	{
+		DSDProp_Flags
+	}
+
+	override void AttachToOwner(Actor other)
+	{
+		Super.AttachToOwner(other);
+		InitStorage(); // [Ace] Only finds the thinker. Doesn not add any items.
+	}
+
+	private void InitStorage()
+	{
+		if (ItemStorage)
+		{
+			return;
+		}
+
+		ItemStorage = DSDStorage.Get(owner.PlayerNumber());
+	}
+
+ 	// [Ace] This only populates the list with available items.
+	private void UpdateStorage()
+	{
+		ItemStorage.RemoveEmpty(); // [Ace] Just in case you dropped something.
+		Inventory Next = owner.Inv;
+		while (Next)
+		{
+			ItemStorage.TryInsertItem(Next, true);
+			Next = Next.Inv;
+		}
+	}
+
+	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
+	override double WeaponBulk()
+	{
+		return 60 + (ItemStorage ? ItemStorage.TotalBulk * 0.3 : 0);
+	}
+	override int DisplayAmount() { return int(ItemStorage.TotalBulk); }
+	override int GetSbarNum()
+	{
+		int Percent = int(ItemStorage.TotalBulk * 100 / DSDStorage.MaxBulk);
+		let sb = HDStatusBar(StatusBar);
+		if (sb)
+		{
+			if (Percent > 80)
+			{
+				sb.savedcolour = Font.CR_RED;
+			}
+			else if (Percent > 60)
+			{
+				sb.savedcolour = Font.CR_YELLOW;
+			}
+			else if (Percent > 0)
+			{
+				sb.savedcolour = Font.CR_WHITE;
+			}
+		}
+		return Percent;
+	}
+	override string GetHelpText()
+	{
+		return WEPHELP_FIRE.."/"..WEPHELP_ALTFIRE.."  Previous/Next item\n"
+		..WEPHELP_FIREMODE.."+"..WEPHELP_UPDOWN.."  Adjust operation amount\n"
+		..WEPHELP_RELOAD.."  Insert\n"
+		..WEPHELP_UNLOAD.."  Remove and drop";
+	}
+
+	override void DrawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl)
+	{
+		int BaseOffset = -80;
+
+		sb.DrawString(sb.pSmallFont, "\c[DarkBrown][] [] [] \c[Cyan]Dimensional Storage Device \c[DarkBrown][] [] []", (0, BaseOffset), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
+		sb.DrawString(sb.pSmallFont, "Total Bulk: \cf"..int(ItemStorage.TotalBulk).."\c-", (0, BaseOffset + 10), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
+
+		int ItemCount = ItemStorage.Items.Size();
+
+		if (ItemCount == 0)
+		{
+			sb.DrawString(sb.pSmallFont, "No items found.", (0, BaseOffset + 30), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_DARKGRAY);
+			return;
+		}
+		
+		DSDStorageItem SelItem = ItemStorage.GetSelectedItem();
+		if (!SelItem)
+		{
+			return;
+		}
+
+		for (int i = 0; i < (ItemCount > 1 ? 5 : 1); ++i)
+		{
+			int RealIndex = (ItemStorage.SelItemIndex + (i - 2)) % ItemCount;
+			if (RealIndex < 0)
+			{
+				RealIndex = ItemCount - abs(RealIndex);
+			}
+
+			vector2 Offset = ItemCount > 1 ? (-100, 8) : (0, 0);
+			switch (i)
+			{
+				case 1: Offset = (-50, 4);  break;
+				case 2: Offset = (0, 0); break;
+				case 3: Offset = (50, 4); break;
+				case 4: Offset = (100, 8); break;
+			}
+
+			DSDStorageItem CurItem = ItemStorage.Items[RealIndex];
+			sb.DrawImage(CurItem.Icon, (Offset.x, BaseOffset + 40 + Offset.y), sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, SelItem == CurItem ? 1.0 : 0.6, SelItem == CurItem ? (50, 30) : (30, 20), SelItem == CurItem ? (4.0, 4.0) : (3.0, 3.0));
+		}
+		
+		sb.DrawString(sb.pSmallFont, SelItem.NiceName, (0, BaseOffset + 60), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_FIRE);
+
+		int AmountInBackpack = SelItem.ItemClass is 'HDMagAmmo' ? SelItem.Amounts.Size() : (SelItem.Amounts.Size() > 0 ? SelItem.Amounts[0] : 0);
+		sb.DrawString(sb.pSmallFont, "In backpack:  "..sb.FormatNumber(AmountInBackpack, 1, 6), (0, BaseOffset + 70), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, AmountInBackpack > 0 ? Font.CR_BROWN : Font.CR_DARKBROWN);
+
+		int AmountOnPerson = GetAmountOnPerson(hpl.FindInventory(SelItem.ItemClass));
+		sb.DrawString(sb.pSmallFont, "On person:  "..sb.FormatNumber(AmountOnPerson, 1, 6), (0, BaseOffset + 78), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, AmountOnPerson > 0 ?  Font.CR_WHITE : Font.CR_DARKGRAY);
+
+		if (!(SelItem.ItemClass is 'HDWeapon'))
+		{
+			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
+
+			if (SelItem.ItemClass is "HDMagAmmo" && !(SelItem.ItemClass is "HDArmour"))
+			{
+				for (int i = 0; i < SelItem.Amounts.Size(); ++i)
+				{
+					vector2 MagsOff = (-120 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
+					sb.DrawImage(SelItem.Icon, MagsOff, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
+					sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i], 1, 4), MagsOff + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
+				}
+			}
+		}
+	}
+
+	clearscope int GetAmountOnPerson(Inventory item)
+	{
+		let wpn = HDWeapon(item);
+		let mag = HDMagAmmo(item);
+		let pkp = HDPickup(item);
+
+		if (wpn)
+		{
+			return wpn.ActualAmount;
+		}
+		else if (mag)
+		{
+			return mag.Mags.Size();
+		}
+		else if (pkp)
+		{
+			return pkp.Amount;
+		}
+
+		return 0;
+	}
+
+	DSDStorage ItemStorage;
+	private int OperationAmount;
+
+	Default
+	{
+		+INVENTORY.INVBAR
+		+WEAPON.WIMPY_WEAPON
+		-HDWEAPON.DROPTRANSLATION
+		-HDWEAPON.FITSINBACKPACK
+		+HDWEAPON.ALWAYSSHOWSTATUS
+		+HDWEAPON.IGNORELOADOUTAMOUNT
+		+WEAPON.CHEATNOTWEAPON
+		Weapon.SelectionOrder 1010;
+		Inventory.Icon "DSDDA0";
+		Inventory.PickupMessage "Picked up a Dimensional Storage Device(tm). For the hoard!";
+		Inventory.PickupSound "weapons/pocket";
+		Tag "Dimensional Storage Device";
+		HDWeapon.RefId "dsd";
+		Scale 0.5;
+	}
+
+	int RepeatTics;
+
+	States
+	{
+		Spawn:
+			DSDD A -1;
+			Stop;
+		Select0:
+			TNT1 A 1
+			{
+				invoker.OperationAmount = 1;
+				invoker.UpdateStorage(); // [Ace] Populates items.
+				A_StartSound("weapons/pocket", CHAN_WEAPON);
+			}
+			TNT1 A 0 A_Raise(999);
+			Wait;
+		Deselect0:
+			TNT1 A 0 A_Lower(999);
+			Wait;
+		Ready:
+			TNT1 A 1
+			{
+				if (PressingFiremode())
+				{
+					// [Ace] This code is copy-pasted from HD and I have no idea what all them bitshifts are supposed to do or why they're used in the first place.
+					int InputAmount = player.cmd.pitch;
+					if(InputAmount)
+					{
+						if(abs(InputAmount) < (1 << 7))
+						{
+							InputAmount = clamp(InputAmount, -1, 1);
+						}
+						else
+						{
+							InputAmount >>= 7;
+						}
+					}
+					InputAmount += (JustPressed(BT_ATTACK) ? 1 : JustPressed(BT_ALTATTACK) ? -1 : 0);
+					HijackMouse();
+					invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount, 1, 30);
+				}
+				else
+				{
+					invoker.RepeatTics--;
+					A_WeaponReady();
+					if (JustPressed(BT_ATTACK))
+					{
+						invoker.UpdateStorage();
+						invoker.ItemStorage.PrevItem();
+					}
+					else if (JustPressed(BT_ALTATTACK))
+					{
+						invoker.UpdateStorage();
+						invoker.ItemStorage.NextItem();
+					}
+
+					if (invoker.RepeatTics <= 0)
+					{
+						if (PressingReload())
+						{
+							invoker.UpdateStorage();
+							DSDStorageItem SelItem = invoker.ItemStorage.GetSelectedItem();
+							if (SelItem)
+							{
+								invoker.ItemStorage.TryInsertItem(SelItem.InvRef, false, invoker.OperationAmount);
+								invoker.RepeatTics = 6;
+							}
+						}
+						else if (PressingUnload())
+						{
+							invoker.UpdateStorage();
+							DSDStorageItem SelItem = invoker.ItemStorage.GetSelectedItem();
+							if (SelItem)
+							{
+								invoker.ItemStorage.RemoveItem(SelItem, invoker.OperationAmount);
+								invoker.RepeatTics = 6;
+							}
+						}
+					}
+				}
+			}
+			Goto ReadyEnd;
+	}
+}
+
+class DSDSpawnEffect : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+		Renderstyle "Add";
+		Scale 0.5;
+	}
+
+	States
+	{
+		Spawn:
+			DSDE A 0 NoDelay
+			{
+				A_StartSound("misc/teleport", pitch: 0.7);
+				for (int i = 0; i < 150; ++i)
+				{
+					A_SpawnParticle(0x88BBFF, SPF_RELATIVE | SPF_FULLBRIGHT, random(8, 12), frandom(2, 3), random(0, 359), 32, 0, 0, -2, 0, frandom(3.5, 4));
+					A_SpawnParticle(0x88BBFF, SPF_RELATIVE | SPF_FULLBRIGHT, random(8, 12), frandom(2, 3), random(0, 359), 32, 0, 0, -2, 0, -frandom(3.5, 4));
+				}
+			}
+			DSDE ABABCDEFGHIJ 3 Bright;
+			Stop;
+	}
+}

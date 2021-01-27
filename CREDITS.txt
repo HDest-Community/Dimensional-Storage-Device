@@ -1,0 +1,8 @@
+Code:
+- Accensus
+
+Name idea:
+- D2Icarus
+
+Sprites:
+- Teleport fog is from Doom (no shit) by id Software. Recolor by Accensus.
