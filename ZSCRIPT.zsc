@@ -399,11 +399,6 @@ class DSDInterface : HDWeapon
 
 	private void InitStorage()
 	{
-		if (ItemStorage)
-		{
-			return;
-		}
-
 		ItemStorage = DSDStorage.Get(owner.PlayerNumber());
 	}
 
