@@ -346,18 +346,17 @@ class DSDStorage : Thinker
 		}
 
 		RemoveEmpty();
-		ClampIndex();
 		CalculateBulk();
 	}
 
 	private void CalculateBulk()
-    {
-        TotalBulk = 0;
-        for (int i = 0; i < Items.Size(); ++i)
-        {
-            TotalBulk += Items[i].GetBulk();
-        }
-    }
+	{
+		TotalBulk = 0;
+		for (int i = 0; i < Items.Size(); ++i)
+		{
+			TotalBulk += Items[i].GetBulk();
+		}
+	}
 
 	void RemoveEmpty()
 	{
@@ -372,6 +371,7 @@ class DSDStorage : Thinker
 			}
 			i++;
 		}
+		ClampIndex();
 	}
 
 	double TotalBulk;
@@ -402,7 +402,7 @@ class DSDInterface : HDWeapon
 		ItemStorage = DSDStorage.Get(owner.PlayerNumber());
 	}
 
- 	// [Ace] This only populates the list with available items.
+	// [Ace] This only populates the list with available items.
 	private void UpdateStorage()
 	{
 		ItemStorage.RemoveEmpty(); // [Ace] Just in case you dropped something.
