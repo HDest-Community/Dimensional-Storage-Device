@@ -542,7 +542,7 @@ class DSDInterface : HDWeapon
 		}
 		else if (mag)
 		{
-			return mag.Mags.Size();
+			return mag is 'HDInjectorMaker' ? mag.Amount : mag.Mags.Size();
 		}
 		else if (pkp)
 		{
