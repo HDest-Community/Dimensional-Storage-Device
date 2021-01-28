@@ -71,7 +71,7 @@ class DSDStorage : Thinker
 		}
 
 		// [Ace] Easily extendable if more conditions need to be added later on.
-		if (wpn && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON)
+		if (wpn && !wpn.bNOINTERACTION && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON)
 		{
 			return 1;
 		}
