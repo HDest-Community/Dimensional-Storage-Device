@@ -31,7 +31,7 @@ class DSDStorageItem play
 	Array<int> Amounts; // [Ace] Only one element (index 0) is used for singular items.
 	Array<int> WeaponStatus; // [Ace] Every HDWEP_STATUSSLOTS starts a new weapon.
 
-	clearscope int GetBulk()
+	clearscope double GetBulk()
 	{
 		int Total = 0;
 		for (int i = 0; i < Bulks.Size(); ++i)
