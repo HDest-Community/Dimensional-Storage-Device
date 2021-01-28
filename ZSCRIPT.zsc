@@ -83,7 +83,7 @@ class DSDStorage : Thinker
 		{
 			return 3;
 		}
-		else if (pkp && !pkp.bNOINTERACTION && pkp.bFITSINBACKPACK)
+		else if (pkp && !pkp.bNOINTERACTION && !pkp.bUNDROPPABLE && !pkp.bUNTOSSABLE && pkp.bFITSINBACKPACK)
 		{
 			return 4;
 		}
@@ -271,7 +271,8 @@ class DSDStorage : Thinker
 						plr.A_Log("Storage is too full.", true);
 						break;
 					}
-					di.Bulks.Push(pkp.Bulk);
+					di.Bulks.Resize(1);
+					di.Bulks[0] += pkp.Bulk;
 					di.Amounts.Resize(1);
 					di.Amounts[0]++;
 					pkp.Amount--;
@@ -349,11 +350,12 @@ class DSDStorage : Thinker
 			newpkp.A_ChangeVelocity(0, 0, frandom(0, 2), CVF_RELATIVE);
 			amt = min(amt, item.Amounts[0]);
 			newpkp.Amount = amt;
-			item.Bulks.Pop();
+			item.Bulks[0] -= amt * newpkp.Bulk;
 			item.Amounts[0] -= amt;
 			if (item.Amounts[0] == 0)
 			{
 				item.Amounts.Pop();
+				item.Bulks.Pop();
 			}
 		}
 
@@ -636,7 +638,7 @@ class DSDInterface : HDWeapon
 							if (SelItem)
 							{
 								invoker.ItemStorage.TryInsertItem(SelItem.InvRef, false, invoker.OperationAmount);
-								invoker.RepeatTics = 6;
+								invoker.RepeatTics = 5;
 							}
 						}
 						else if (PressingUnload())
@@ -646,7 +648,7 @@ class DSDInterface : HDWeapon
 							if (SelItem)
 							{
 								invoker.ItemStorage.RemoveItem(SelItem, invoker.OperationAmount);
-								invoker.RepeatTics = 6;
+								invoker.RepeatTics = 5;
 							}
 						}
 					}
