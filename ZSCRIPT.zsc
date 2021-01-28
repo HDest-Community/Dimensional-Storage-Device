@@ -65,6 +65,11 @@ class DSDStorage : Thinker
 
 	clearscope int CheckConditions(HDWeapon wpn, HDArmour arm, HDMagAmmo mag, HDPickup pkp)
 	{
+		if (wpn is 'HDBackpack')
+		{
+			return 0;
+		}
+
 		// [Ace] Easily extendable if more conditions need to be added later on.
 		if (wpn && wpn.RefId != "" && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON)
 		{
@@ -174,6 +179,10 @@ class DSDStorage : Thinker
 				break;
 			case 3:
 				di.Icon = mag.GetMagSprite(mag.MaxPerUnit);
+				if (di.Icon == "")
+				{
+					di.Icon = TexMan.GetName(mag.Icon);
+				}
 				break;
 		}
 
@@ -504,7 +513,7 @@ class DSDInterface : HDWeapon
 		{
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
 
-			if (SelItem.ItemClass is "HDMagAmmo" && !(SelItem.ItemClass is "HDArmour"))
+			if (SelItem.ItemClass is 'HDMagAmmo' && !(SelItem.ItemClass is 'HDArmour') && !(SelItem.ItemClass is 'HDInjectorMaker'))
 			{
 				for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 				{
