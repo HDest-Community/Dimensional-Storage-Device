@@ -240,6 +240,10 @@ class DSDStorage : Thinker
 				for (int i = 0; i < min(amt, MagCount); ++i)
 				{
 					double MagBulk = mag.MagBulk + mag.RoundBulk * (mag.Mags.Size() ? mag.Mags[mag.Mags.Size() - 1] : mag.MaxPerUnit);
+					if (MagBulk == 0)
+					{
+						MagBulk = mag.Bulk;
+					}
 					if (TotalBulk + MagBulk >= MaxBulk)
 					{
 						plr.A_Log("Storage is too full.", true);
