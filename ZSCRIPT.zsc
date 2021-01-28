@@ -533,16 +533,11 @@ class DSDInterface : HDWeapon
 	clearscope int GetAmountOnPerson(Inventory item)
 	{
 		let wpn = HDWeapon(item);
-		let mag = HDMagAmmo(item);
 		let pkp = HDPickup(item);
 
 		if (wpn)
 		{
 			return wpn.ActualAmount;
-		}
-		else if (mag)
-		{
-			return mag is 'HDInjectorMaker' ? mag.Amount : mag.Mags.Size();
 		}
 		else if (pkp)
 		{
