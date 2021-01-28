@@ -258,11 +258,6 @@ class DSDStorage : Thinker
 				int PickupCount = pkp.Amount;
 				for (int i = 0; i < min(amt, PickupCount); ++i)
 				{
-					if (di.Amounts.Size() > 0 && di.Amounts[0] >= pkp.MaxAmount)
-					{
-						plr.A_Log("Cannot insert more of that item.", true);
-						break;
-					}
 					if (TotalBulk + pkp.Bulk >= MaxBulk)
 					{
 						plr.A_Log("Storage is too full.", true);
