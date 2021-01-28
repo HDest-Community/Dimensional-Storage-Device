@@ -173,6 +173,10 @@ class DSDStorage : Thinker
 		{
 			case 1:
 				di.Icon = wpn.GetPickupSprite();
+				if (di.Icon == "")
+				{
+					di.Icon = TexMan.GetName(wpn.Icon);
+				}
 				break;
 			case 2:
 				di.Icon = arm.CheckMega() ? "ARMCA0" : "ARMSA0";
