@@ -63,6 +63,7 @@ class DSDStorage : Thinker
 		return Storage;
 	}
 
+	// [Ace] Can also be used as "ClassifyItem". Multiuse!
 	clearscope int CheckConditions(HDWeapon wpn, HDArmour arm, HDMagAmmo mag, HDPickup pkp)
 	{
 		if (wpn is 'HDBackpack')
@@ -167,27 +168,28 @@ class DSDStorage : Thinker
 
 		di.ItemClass = item.GetClass();
 		di.NiceName = item.GetTag();
-		di.Icon = TexMan.GetName(item.Icon);
 		di.InvRef = item;
 		switch (Type)
 		{
 			case 1:
 				di.Icon = wpn.GetPickupSprite();
-				if (di.Icon == "")
-				{
-					di.Icon = TexMan.GetName(wpn.Icon);
-				}
 				break;
 			case 2:
 				di.Icon = arm.CheckMega() ? "ARMCA0" : "ARMSA0";
 				break;
 			case 3:
 				di.Icon = mag.GetMagSprite(mag.MaxPerUnit);
-				if (di.Icon == "")
-				{
-					di.Icon = TexMan.GetName(mag.Icon);
-				}
 				break;
+		}
+
+		// [Ace] Still empty? Fallback time.
+		if (di.Icon == "")
+		{
+			di.Icon = TexMan.GetName(item.Icon);
+			if (di.Icon == "") // [Ace] Persistent bastard, aren't ya?
+			{
+				di.Icon = TexMan.GetName(item.SpawnState.GetSpriteTexture(0));
+			}
 		}
 
 		if (noInsert)
