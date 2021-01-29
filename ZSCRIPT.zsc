@@ -26,7 +26,7 @@ class DSDStorageItem play
 	Inventory InvRef;
 	class<Inventory> ItemClass;
 	string NiceName;
-	string Icon;
+	Array<string> Icons;
 	Array<double> Bulks;
 	Array<int> Amounts; // [Ace] Only one element (index 0) is used for singular items.
 	Array<int> WeaponStatus; // [Ace] Every HDWEP_STATUSSLOTS starts a new weapon.
@@ -169,31 +169,37 @@ class DSDStorage : Thinker
 		di.ItemClass = item.GetClass();
 		di.NiceName = item.GetTag();
 		di.InvRef = item;
+		string Icon;
 		switch (Type)
 		{
 			case 1:
-				di.Icon = wpn.GetPickupSprite();
+				Icon = wpn.GetPickupSprite();
 				break;
 			case 2:
-				di.Icon = arm.CheckMega() ? "ARMCA0" : "ARMSA0";
+				Icon = arm.CheckMega() ? "ARMCA0" : "ARMSA0";
 				break;
 			case 3:
-				di.Icon = mag.GetMagSprite(mag.MaxPerUnit);
+				Icon = mag.GetMagSprite(mag.MaxPerUnit);
 				break;
 		}
 
 		// [Ace] Still empty? Fallback time.
-		if (di.Icon == "")
+		if (Icon == "")
 		{
-			di.Icon = TexMan.GetName(item.Icon);
-			if (di.Icon == "") // [Ace] Persistent bastard, aren't ya?
+			Icon = TexMan.GetName(item.Icon);
+			if (Icon == "") // [Ace] Persistent bastard, aren't ya?
 			{
-				di.Icon = TexMan.GetName(item.SpawnState.GetSpriteTexture(0));
+				Icon = TexMan.GetName(item.SpawnState.GetSpriteTexture(0));
 			}
 		}
 
 		if (noInsert)
 		{
+			// [Ace] Only insert the icon for the purpose of displaying the item if it's not in the backpack yet.
+			if (di.Icons.Size() == 0)
+			{
+				di.Icons.Push(Icon);
+			}
 			return;
 		}
 
@@ -205,6 +211,10 @@ class DSDStorage : Thinker
 				{
 					plr.A_Log("Storage is too full.", true);
 					break;
+				}
+				if (di.Amounts.Size() > 0 && di.Amounts[0] > 0) // [Ace] An icon already exists for preview purposes. Don't bother adding another one for the first element.
+				{
+					di.Icons.Push(Icon);
 				}
 				di.Bulks.Push(wpn.WeaponBulk());
 				di.Amounts.Resize(1);
@@ -233,6 +243,10 @@ class DSDStorage : Thinker
 					plr.A_Log("Storage is too full.", true);
 					break;
 				}
+				if (di.Amounts.Size() > 0)
+				{
+					di.Icons.Push(Icon);
+				}
 				di.Bulks.Push(ArmBulk);
 				di.Amounts.Push(arm.TakeMag(false));
 				if (arm.Amount == 0)
@@ -255,6 +269,8 @@ class DSDStorage : Thinker
 						plr.A_Log("Storage is too full.", true);
 						break;
 					}
+					di.Icons.Resize(1);
+					di.Icons[0] = Icon;
 					di.Bulks.Push(MagBulk);
 					di.Amounts.Push(mag.TakeMag(false));
 					if (mag.Amount == 0)
@@ -273,6 +289,8 @@ class DSDStorage : Thinker
 						plr.A_Log("Storage is too full.", true);
 						break;
 					}
+					di.Icons.Resize(1);
+					di.Icons[0] = Icon;
 					di.Bulks.Resize(1);
 					di.Bulks[0] += pkp.Bulk;
 					di.Amounts.Resize(1);
@@ -294,6 +312,7 @@ class DSDStorage : Thinker
 	void RemoveItem(DSDStorageItem item, int amt = 1)
 	{
 		let wpn = (class<HDWeapon>)(item.ItemClass);
+		let arm = (class<HDArmour>)(item.ItemClass);
 		let mag = (class<HDMagAmmo>)(item.ItemClass);
 		let pkp = (class<HDPickup>)(item.ItemClass);
 		let plr = players[TrackedPlayer].mo;
@@ -307,7 +326,7 @@ class DSDStorage : Thinker
 		vector3 SpawnPos = (0, 0, 0);
 		for (int i = 64; i >= 0; i -= 8)
 		{
-			SpawnPos  =plr.Vec3Angle(i, plr.angle, SpawnHeight);
+			SpawnPos = plr.Vec3Angle(i, plr.angle, SpawnHeight);
 			if (level.IsPointInLevel(SpawnPos))
 			{
 				break;
@@ -318,20 +337,37 @@ class DSDStorage : Thinker
 			Actor.Spawn("DSDSpawnEffect", SpawnPos);
 			HDWeapon newwpn = HDWeapon(Actor.Spawn(wpn, SpawnPos));
 			newwpn.A_ChangeVelocity(0, 0, frandom(0, 2), CVF_RELATIVE);
-			for (int i = HDWEP_STATUSSLOTS - 1; i >= 0; --i)
+			for (int i = 0; i < HDWEP_STATUSSLOTS; ++i)
 			{
-				int StartIndex = HDWEP_STATUSSLOTS * (item.Amounts[0] - 1) + i;
-				newwpn.WeaponStatus[i] = item.WeaponStatus[StartIndex];
+				newwpn.WeaponStatus[i] = item.WeaponStatus[i];
 			}
-			item.WeaponStatus.Delete(HDWEP_STATUSSLOTS * (item.Amounts[0] - 1), HDWEP_STATUSSLOTS);
-			item.Bulks.Pop();
+			item.WeaponStatus.Delete(0, HDWEP_STATUSSLOTS);
+			if (item.Icons.Size() > 1) // [Ace] Don't delete the last icon. It is used for the preview.
+			{
+				item.Icons.Delete(0);
+			}
+			item.Bulks.Delete(0);
 			item.Amounts[0]--;
 			if (item.Amounts[0] == 0)
 			{
 				item.Amounts.Pop();
 			}
 		}
-		else if (mag) // [Ace] Same shite.
+		else if (arm)
+		{
+			Actor.Spawn("DSDSpawnEffect", SpawnPos);
+			HDArmour newarm = HDArmour(Actor.Spawn(arm, SpawnPos));
+			newarm.angle = random(0, 359);
+			newarm.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
+			newarm.Mags[0] = item.Amounts[0];
+			if (item.Icons.Size() > 1)
+			{
+				item.Icons.Delete(0);
+			}
+			item.Bulks.Delete(0);
+			item.Amounts.Delete(0);
+		}
+		else if (mag) // [Ace] Same shite. Mags and armor aren't in the same condition because of how icons are handled. I'd like to keep them separate.
 		{
 			Actor.Spawn("DSDSpawnEffect", SpawnPos);
 			int MagAmt = item.Amounts.Size();
@@ -340,17 +376,9 @@ class DSDStorage : Thinker
 				HDMagAmmo newmag = HDMagAmmo(Actor.Spawn(mag, SpawnPos));
 				newmag.angle = random(0, 359);
 				newmag.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
-				int MagAmt = item.Amounts[item.Amounts.Size() - 1];
-				if (newmag is 'HDArmour')
-				{
-					newmag.Mags[0] = MagAmt;
-				}
-				else
-				{
-					newmag.Mags.Push(MagAmt);
-				}
-				item.Bulks.Pop();
-				item.Amounts.Pop();
+				newmag.Mags.Push(item.Amounts[0]);
+				item.Bulks.Delete(0);
+				item.Amounts.Delete(0);
 			}
 		}
 		else if (pkp)
@@ -364,8 +392,7 @@ class DSDStorage : Thinker
 			item.Amounts[0] -= amt;
 			if (item.Amounts[0] == 0)
 			{
-				item.Amounts.Pop();
-				item.Bulks.Pop();
+				item.Amounts.Delete(0);
 			}
 		}
 
@@ -514,7 +541,7 @@ class DSDInterface : HDWeapon
 
 			DSDStorageItem CurItem = ItemStorage.Items[RealIndex];
 			bool CenterItem = Offset ~== (0, 0);
-			sb.DrawImage(CurItem.Icon, (Offset.x, BaseOffset + 40 + Offset.y), sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, CenterItem ? 1.0 : 0.6, CenterItem ? (50, 30) : (30, 20), CenterItem ? (4.0, 4.0) : (3.0, 3.0));
+			sb.DrawImage(CurItem.Icons[0], (Offset.x, BaseOffset + 40 + Offset.y), sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, CenterItem ? 1.0 : 0.6, CenterItem ? (50, 30) : (30, 20), CenterItem ? (4.0, 4.0) : (3.0, 3.0));
 		}
 		
 		sb.DrawString(sb.pSmallFont, SelItem.NiceName, (0, BaseOffset + 60), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_FIRE);
@@ -525,18 +552,36 @@ class DSDInterface : HDWeapon
 		int AmountOnPerson = GetAmountOnPerson(hpl.FindInventory(SelItem.ItemClass));
 		sb.DrawString(sb.pSmallFont, "On person:  "..sb.FormatNumber(AmountOnPerson, 1, 6), (0, BaseOffset + 78), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, AmountOnPerson > 0 ?  Font.CR_WHITE : Font.CR_DARKGRAY);
 
-		if (!(SelItem.ItemClass is 'HDWeapon'))
+		if (SelItem.ItemClass is 'HDPickup' && !(SelItem.ItemClass is 'HDArmour'))
 		{
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
+		}
 
-			if (SelItem.ItemClass is 'HDMagAmmo' && !(SelItem.ItemClass is 'HDArmour') && !(SelItem.ItemClass is 'HDInjectorMaker'))
+		if (SelItem.ItemClass is 'HDArmour')
+		{
+			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 			{
-				for (int i = 0; i < SelItem.Amounts.Size(); ++i)
-				{
-					vector2 MagsOff = (-120 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
-					sb.DrawImage(SelItem.Icon, MagsOff, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
-					sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i], 1, 4), MagsOff + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
-				}
+				vector2 Off = (-120 + 35 * (i % 8), BaseOffset + 110 + 35 * (i / 8));
+				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (30, 20), (4.0, 4.0));
+				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i] > 1000 ? SelItem.Amounts[i] - 1000 : SelItem.Amounts[i], 1, 4), Off + (0, 12), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_YELLOW);
+			}
+		}
+		else if (SelItem.ItemClass is 'HDMagAmmo' && !(SelItem.ItemClass is 'HDInjectorMaker'))
+		{
+			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
+			{
+				vector2 Off = (-120 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
+				sb.DrawImage(SelItem.Icons[0], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
+				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i], 1, 4), Off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
+			}
+		}
+		else if (SelItem.ItemClass is 'HDWeapon' && SelItem.Amounts.Size() > 0 && SelItem.Amounts[0] > 1)
+		{
+			// [Ace] Don't display the first weapon. It's already in the preview.
+			for (int i = 1; i < SelItem.Amounts[0]; ++i)
+			{
+				vector2 Off = (-120 + 60 * (i % 5), BaseOffset + 110 + 30 * (i / 5));
+				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
 			}
 		}
 	}
