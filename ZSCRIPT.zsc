@@ -442,7 +442,7 @@ class DSDInterface : HDWeapon
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk()
 	{
-		return 60 + (ItemStorage ? ItemStorage.TotalBulk * 0.3 : 0);
+		return 80 + (ItemStorage ? ItemStorage.TotalBulk * 0.10 : 0);
 	}
 	override int DisplayAmount() { return int(ItemStorage.TotalBulk); }
 	override int GetSbarNum()
