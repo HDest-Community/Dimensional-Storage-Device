@@ -33,7 +33,7 @@ class DSDStorageItem play
 
 	clearscope double GetBulk()
 	{
-		int Total = 0;
+		double Total = 0;
 		for (int i = 0; i < Bulks.Size(); ++i)
 		{
 			Total += Bulks[i];
