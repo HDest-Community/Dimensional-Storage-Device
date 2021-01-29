@@ -438,6 +438,7 @@ class DSDInterface : HDWeapon
 		}
 	}
 
+	override bool IsBeingWorn() { return true; }
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk()
 	{
