@@ -1,7 +1,9 @@
 version "4.5"
 
-class DSDHandler : StaticEventHandler
+class DSDHandler : EventHandler
 {
+	DSDStorage Storages[MAXPLAYERS];
+
 	override void CheckReplacement(ReplaceEvent e)
 	{
 		if (!e.Replacement)
@@ -18,6 +20,79 @@ class DSDHandler : StaticEventHandler
 				}
 				break;
 		}
+	}
+
+	override void PlayerEntered(PlayerEvent e)
+	{
+		Storages[e.PlayerNumber] = DSDStorage.Get(e.PlayerNumber);
+	}
+
+	// [Ace] I legitimately have no idea if this is even a good idea, but it seems to be the only way to manipulate the variables due to scoping.
+	override void NetworkProcess(ConsoleEvent e)
+	{
+		let DSD = Storages[e.Player];
+
+		if (e.Name ~== "DSD_BeginSearch")
+		{
+			DSD.InSearchMode = true;
+			return;
+		}
+
+		if (e.Name ~== "DSD_ApplySearch")
+		{
+			DSD.ApplySearch();
+			return;
+		}
+
+		if (e.Name ~== "DSD_DeleteLastChar")
+		{
+			DSD.SearchString.DeleteLastCharacter();
+			return;
+		}
+
+		if (e.Name ~== "DSD_AppendChar")
+		{
+			DSD.SearchString = DSD.SearchString..String.Format("%c", e.Args[0]);
+			return;
+		}
+	}
+
+	override bool InputProcess(InputEvent e)
+	{
+		let plr = players[consoleplayer].mo;
+		if (plr && plr.player && plr.player.ReadyWeapon is 'DSDInterface' && e.Type == e.Type_KeyDown)
+		{
+			if (!Storages[consoleplayer].InSearchMode && e.KeyScan == e.Key_Enter)
+			{
+				EventHandler.SendNetworkEvent("DSD_BeginSearch");
+				return true;
+			}
+			else if (e.Type == e.Type_KeyDown && Storages[consoleplayer].InSearchMode)
+			{
+				switch (e.KeyScan)
+				{
+					// Apply filter.
+					case e.Key_Enter:
+						EventHandler.SendNetworkEvent("DSD_ApplySearch");
+						break;
+
+					// Delete last character.
+					case e.Key_Backspace:
+						EventHandler.SendNetworkEvent("DSD_DeleteLastChar");
+						break;
+
+					default:
+						if (Storages[consoleplayer].SearchString.Length() < 20 && e.KeyChar >= 32 && e.KeyChar <= 126) // [Ace] Only valid characters.
+						{
+							EventHandler.SendNetworkEvent("DSD_AppendChar", e.KeyChar);
+						}
+						break;
+				}
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
 
@@ -103,6 +178,21 @@ class DSDStorage : Thinker
 		}
 
 		return null;
+	}
+
+	void ApplySearch()
+	{
+		for (int i = 0; i < Items.Size(); ++i)
+		{
+			string NiceNameLower = Items[i].NiceName.MakeLower();
+			SearchString = SearchString.MakeLower();
+			if (NiceNameLower.IndexOf(SearchString) != -1)
+			{
+				SelItemIndex = i;
+			}
+		}
+		SearchString = "";
+		InSearchMode = false;
 	}
 
 	void PrevItem()
@@ -429,6 +519,8 @@ class DSDStorage : Thinker
 	int TrackedPlayer;
 	int SelItemIndex;
 	Array<DSDStorageItem> Items;
+	string SearchString;
+	bool InSearchMode;
 
 	const MaxBulk = 10000;
 }
@@ -498,7 +590,7 @@ class DSDInterface : HDWeapon
 		return WEPHELP_FIRE.."/"..WEPHELP_ALTFIRE.."  Previous/Next item\n"
 		..WEPHELP_FIREMODE.."+"..WEPHELP_UPDOWN.."  Adjust operation amount\n"
 		..WEPHELP_RELOAD.."  Insert\n"
-		..WEPHELP_UNLOAD.."  Remove and drop";
+		..WEPHELP_BTCOL.."Enter"..WEPHELP_RGCOL.."  Search mode/apply search";
 	}
 
 	override void DrawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl)
@@ -557,11 +649,16 @@ class DSDInterface : HDWeapon
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
 		}
 
+		if (ItemStorage.InSearchMode)
+		{
+			sb.DrawString(sb.pSmallFont, "Searching: "..ItemStorage.SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
+		}
+
 		if (SelItem.ItemClass is 'HDArmour')
 		{
 			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 			{
-				vector2 Off = (-120 + 35 * (i % 8), BaseOffset + 110 + 35 * (i / 8));
+				vector2 Off = (-126 + 35 * (i % 8), BaseOffset + 110 + 35 * (i / 8));
 				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (30, 20), (4.0, 4.0));
 				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i] > 1000 ? SelItem.Amounts[i] - 1000 : SelItem.Amounts[i], 1, 4), Off + (0, 12), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_YELLOW);
 			}
@@ -570,7 +667,7 @@ class DSDInterface : HDWeapon
 		{
 			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 			{
-				vector2 Off = (-120 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
+				vector2 Off = (-126 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
 				sb.DrawImage(SelItem.Icons[0], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
 				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i], 1, 4), Off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
 			}
@@ -580,7 +677,7 @@ class DSDInterface : HDWeapon
 			// [Ace] Don't display the first weapon. It's already in the preview.
 			for (int i = 1; i < SelItem.Amounts[0]; ++i)
 			{
-				vector2 Off = (-120 + 60 * (i % 5), BaseOffset + 110 + 30 * (i / 5));
+				vector2 Off = (-126 + 60 * (i % 5), BaseOffset + 110 + 30 * (i / 5));
 				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
 			}
 		}
@@ -603,7 +700,7 @@ class DSDInterface : HDWeapon
 		return 0;
 	}
 
-	DSDStorage ItemStorage;
+	private DSDStorage ItemStorage;
 	private int OperationAmount;
 
 	Default
