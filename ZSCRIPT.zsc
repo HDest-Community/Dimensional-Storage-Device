@@ -14,7 +14,7 @@ class DSDHandler : EventHandler
 		switch (e.Replacement.GetClassName())
 		{
 			case 'WildBackpack':
-				if (random[dsdrand]() <= 20)
+				if (random[dsdrand]() <= 24)
 				{
 					e.Replacement = "DSDInterface";
 				}
@@ -135,6 +135,7 @@ class DSDStorage : Thinker
 		Storage = new('DSDStorage');
 		Storage.ChangeStatNum(STAT_STATIC);
 		Storage.TrackedPlayer = num;
+		Storage.MaxBulk = 2000;
 		return Storage;
 	}
 
@@ -517,13 +518,12 @@ class DSDStorage : Thinker
 	}
 
 	double TotalBulk;
+	double MaxBulk;
 	int TrackedPlayer;
 	int SelItemIndex;
 	Array<DSDStorageItem> Items;
 	string SearchString;
 	bool InSearchMode;
-
-	const MaxBulk = 10000;
 }
 
 // [Ace] I'm not using any of the backpack stuff. Everything is my own implementation.
@@ -567,7 +567,7 @@ class DSDInterface : HDWeapon
 	override int DisplayAmount() { return int(ItemStorage.TotalBulk); }
 	override int GetSbarNum()
 	{
-		int Percent = int(ItemStorage.TotalBulk * 100 / DSDStorage.MaxBulk);
+		int Percent = int(ItemStorage.TotalBulk * 100 / ItemStorage.MaxBulk);
 		let sb = HDStatusBar(StatusBar);
 		if (sb)
 		{
@@ -599,7 +599,7 @@ class DSDInterface : HDWeapon
 		int BaseOffset = -80;
 
 		sb.DrawString(sb.pSmallFont, "\c[DarkBrown][] [] [] \c[Cyan]Dimensional Storage Device \c[DarkBrown][] [] []", (0, BaseOffset), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
-		sb.DrawString(sb.pSmallFont, "Total Bulk: \cf"..int(ItemStorage.TotalBulk).."\c-", (0, BaseOffset + 10), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
+		sb.DrawString(sb.pSmallFont, "Total Bulk: \cf"..int(ItemStorage.TotalBulk).."/"..int(ItemStorage.MaxBulk).."\c-", (0, BaseOffset + 10), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
 
 		int ItemCount = ItemStorage.Items.Size();
 
@@ -684,21 +684,27 @@ class DSDInterface : HDWeapon
 		}
 	}
 
+	override void ActualPickup(Actor other)
+	{
+		let DSD = DSDInterface(other.FindInventory("DSDInterface"));
+		if (DSD && DSD.ItemStorage)
+		{
+			other.A_StartSound("weapons/pocket");
+			other.A_Log("Your storage has expanded.", true);
+			DSD.ItemStorage.MaxBulk += 1000;
+			Destroy();
+			return;
+		}
+		
+		Super.ActualPickup(other);
+	}
+
 	clearscope int GetAmountOnPerson(Inventory item)
 	{
 		let wpn = HDWeapon(item);
 		let pkp = HDPickup(item);
 
-		if (wpn)
-		{
-			return wpn.ActualAmount;
-		}
-		else if (pkp)
-		{
-			return pkp.Amount;
-		}
-
-		return 0;
+		return wpn ? wpn.ActualAmount : pkp ? pkp.Amount : 0;
 	}
 
 	private DSDStorage ItemStorage;
