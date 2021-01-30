@@ -567,7 +567,11 @@ class DSDInterface : HDWeapon
 	override int DisplayAmount() { return int(ItemStorage.TotalBulk); }
 	override int GetSbarNum()
 	{
-		int Percent = int(ItemStorage.TotalBulk * 100 / ItemStorage.MaxBulk);
+		int Percent = 0;
+		if (ItemStorage.MaxBulk > 0)
+		{
+			Percent = int(ItemStorage.TotalBulk * 100 / ItemStorage.MaxBulk);
+		}
 		let sb = HDStatusBar(StatusBar);
 		if (sb)
 		{
