@@ -189,6 +189,7 @@ class DSDStorage : Thinker
 			if (NiceNameLower.IndexOf(SearchString) != -1)
 			{
 				SelItemIndex = i;
+				break;
 			}
 		}
 		SearchString = "";
