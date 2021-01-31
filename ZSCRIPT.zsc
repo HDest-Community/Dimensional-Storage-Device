@@ -538,7 +538,7 @@ class DSDInterface : HDWeapon
 	override void AttachToOwner(Actor other)
 	{
 		Super.AttachToOwner(other);
-		InitStorage(); // [Ace] Only finds the thinker. Doesn not add any items.
+		InitStorage(); // [Ace] Only finds the thinker. Does not add any items.
 	}
 
 	private void InitStorage()
