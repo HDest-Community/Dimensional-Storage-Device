@@ -418,7 +418,7 @@ class DSDStorage : Thinker
 		vector3 SpawnPos = (0, 0, 0);
 		for (int i = 64; i >= 0; i -= 8)
 		{
-			SpawnPos = plr.Vec3Angle(i, plr.angle, SpawnHeight);
+			SpawnPos = plr.Vec3Angle(i - 8, plr.angle, SpawnHeight);
 			if (level.IsPointInLevel(SpawnPos))
 			{
 				break;
