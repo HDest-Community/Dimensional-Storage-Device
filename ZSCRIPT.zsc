@@ -688,7 +688,7 @@ class DSDInterface : HDWeapon
 		}
 	}
 
-	override void ActualPickup(Actor other)
+	override void ActualPickup(Actor other, bool silent)
 	{
 		let DSD = DSDInterface(other.FindInventory("DSDInterface"));
 		if (DSD && DSD.ItemStorage)
@@ -700,7 +700,7 @@ class DSDInterface : HDWeapon
 			return;
 		}
 		
-		Super.ActualPickup(other);
+		Super.ActualPickup(other, silent);
 	}
 
 	clearscope int GetAmountOnPerson(Inventory item)
