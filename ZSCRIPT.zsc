@@ -183,6 +183,12 @@ class DSDStorage : Thinker
 
 	void ApplySearch()
 	{
+		if (SearchString == "")
+		{
+			InSearchMode = false;
+			return;
+		}
+
 		for (int i = 0; i < Items.Size(); ++i)
 		{
 			string NiceNameLower = Items[i].NiceName.MakeLower();
