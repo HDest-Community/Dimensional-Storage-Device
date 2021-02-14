@@ -218,10 +218,6 @@ class DSDStorage : ItemStorage
 					{
 						newwpn.WeaponStatus[i] = item.WeaponStatus[HDWEP_STATUSSLOTS * index + i];
 					}
-					if (receiver)
-					{
-						newwpn.ActualPickup(receiver);
-					}
 					if (newwpn.bDROPTRANSLATION)
 					{
 						newwpn.Translation = remover.Translation;
@@ -253,10 +249,6 @@ class DSDStorage : ItemStorage
 					Spawned = Inventory(Actor.Spawn(arm, SpawnPos));
 					HDArmour newarm = HDArmour(Spawned);
 					newarm.Mags[0] = item.Amounts[0];
-					if (receiver)
-					{
-						newarm.ActualPickup(receiver, true);
-					}
 					newarm.angle = random(0, 359);
 					newarm.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
 				}
@@ -281,10 +273,6 @@ class DSDStorage : ItemStorage
 					Spawned = Inventory(Actor.Spawn(mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(Spawned);
 					newmag.Mags.Push(item.Amounts[0]);
-					if (receiver)
-					{
-						newmag.ActualPickup(receiver, true);
-					}
 					newmag.angle = random(0, 359);
 					newmag.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
 				}
@@ -300,16 +288,7 @@ class DSDStorage : ItemStorage
 				Actor.Spawn("DSDSpawnEffect", SpawnPos);
 				Spawned = Inventory(Actor.Spawn(pkp, SpawnPos));
 				HDPickup newpkp = HDPickup(Spawned);
-				if (receiver)
-				{
-					newpkp.Amount = amt;
-					newpkp.ActualPickup(receiver, true);
-				}
-				else
-				{
-					amt = min(random(10, 50), item.Amounts[0]);
-					newpkp.Amount = amt;
-				}
+				newpkp.Amount = amt;
 				newpkp.angle = random(0, 359);
 				newpkp.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
 			}
