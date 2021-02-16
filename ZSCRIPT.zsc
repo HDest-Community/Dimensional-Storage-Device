@@ -178,7 +178,7 @@ class DSDStorage : ItemStorage
 		return IType_Invalid;
 	}
 
-	override Inventory RemoveItem(StorageItem item, Actor remover, Actor receiver, int amt, int index)
+	override Inventory RemoveItem(StorageItem item, Actor remover, Actor receiver, int amt, int index, int flags)
 	{
 		if (!item || item.Amounts.Size() == 0 || amt < 1)
 		{
@@ -211,7 +211,10 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					if (!(flags & BF_FROMCONSOLIDATE))
+					{
+						Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					}
 					Spawned = Inventory(Actor.Spawn(wpn, SpawnPos));
 					HDWeapon newwpn = HDWeapon(Spawned);
 					for (int i = 0; i < HDWEP_STATUSSLOTS; ++i)
@@ -245,7 +248,10 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					if (!(flags & BF_FROMCONSOLIDATE))
+					{
+						Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					}
 					Spawned = Inventory(Actor.Spawn(arm, SpawnPos));
 					HDArmour newarm = HDArmour(Spawned);
 					newarm.Mags[0] = item.Amounts[0];
@@ -269,7 +275,10 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					if (!(flags & BF_FROMCONSOLIDATE))
+					{
+						Actor.Spawn("DSDSpawnEffect", SpawnPos);
+					}
 					Spawned = Inventory(Actor.Spawn(mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(Spawned);
 					newmag.Mags.Push(item.Amounts[0]);
@@ -285,7 +294,10 @@ class DSDStorage : ItemStorage
 			amt = min(amt, item.Amounts[0]);
 			if (remover)
 			{
-				Actor.Spawn("DSDSpawnEffect", SpawnPos);
+				if (!(flags & BF_FROMCONSOLIDATE))
+				{
+					Actor.Spawn("DSDSpawnEffect", SpawnPos);
+				}
 				Spawned = Inventory(Actor.Spawn(pkp, SpawnPos));
 				HDPickup newpkp = HDPickup(Spawned);
 				newpkp.Amount = amt;
