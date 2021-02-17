@@ -120,6 +120,11 @@ class DSDStorage : ItemStorage
 		InSearchMode = false;
 	}
 
+	override string GetFailMessage()
+	{
+		return "Your storage is full.";
+	}
+
 	override int CheckConditions(Inventory item, class<Inventory> cls)
 	{
 		if (item)
