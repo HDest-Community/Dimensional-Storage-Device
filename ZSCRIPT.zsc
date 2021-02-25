@@ -371,7 +371,7 @@ class DSDInterface : HDBackpack
 	override void DropOneAmmo(int amt) {}
 	override void Consolidate() {}
 	override bool CanGrabInsert(Inventory item, class<Inventory> item, Actor grabber) { return false; }
-	override bool IsBeingWorn() { return false; }
+	override bool IsBeingWorn() { return true; }
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk()
 	{
