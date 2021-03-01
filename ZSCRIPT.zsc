@@ -463,7 +463,13 @@ class DSDInterface : HDBackpack
 			{
 				vector2 Off = (-126 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
 				sb.DrawImage(SelItem.Icons[0], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
-				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i], 1, 4), Off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
+
+				int MagAmt = SelItem.Amounts[i];
+				if (MagAmt == 51 && SelItem.ItemClass is 'HD4mMag')
+				{
+					MagAmt = 50;
+				}
+				sb.DrawString(sb.mAmountFont, sb.FormatNumber(MagAmt, 1, 4), Off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
 			}
 		}
 		else if (SelItem.ItemClass is 'HDWeapon' && SelItem.Amounts.Size() > 0 && SelItem.Amounts[0] > 1)
