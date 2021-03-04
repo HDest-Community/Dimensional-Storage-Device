@@ -14,7 +14,7 @@ class DSDHandler : EventHandler
 		switch (e.Replacement.GetClassName())
 		{
 			case 'WildBackpack':
-				if (random[dsdrand]() <= 32)
+				if (random[dsdrand]() <= 48)
 				{
 					e.Replacement = "DSDInterface";
 				}
