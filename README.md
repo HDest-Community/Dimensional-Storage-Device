@@ -1,6 +1,5 @@
 ### Notes
 ---
-- The Dimensional Storage Device can only be found in the wild.
 - Loadout code is `dsd`.
 - Some HDPickup items cannot be inserted into the backpack. That is intentional as there is no way to save some variables, which results in various exploits caused by packing and unpacking an item.
 - Each player gets their own storage.
