@@ -365,14 +365,29 @@ class DSDInterface : HDBackpack
 		Super.AttachToOwner(other);
 
 		Storage = DSDStorageThinker.Get(owner.PlayerNumber());
-		Super.LoadoutConfigure(ConfigString);
-		ConfigString = "";
+
+		// [Ace] I gotta set these here and not in LoadoutConfigure because that one is called before the storage can be initialized.
+		if (StartingLimit > 0)
+		{
+			Storage.MaxBulk = StartingLimit;
+			StartingLimit = 0;
+		}
+
+		if (ConfigString != "")
+		{
+			Super.LoadoutConfigure(ConfigString);
+			ConfigString = "";
+		}
 	}
 
 	override void UpdateCapacity() {}
 	override void DropOneAmmo(int amt) {}
 	override void Consolidate() {}
-	override void LoadoutConfigure(string input) { ConfigString = input; }
+	override void LoadoutConfigure(string input)
+	{
+		ConfigString = input;
+		StartingLimit = GetLoadoutVar(input, "limit", 5);
+	}
 	override bool CanGrabInsert(Inventory item, class<Inventory> item, Actor grabber) { return false; }
 	override bool IsBeingWorn() { return true; }
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
@@ -503,6 +518,7 @@ class DSDInterface : HDBackpack
 
 	private int OperationAmount;
 	private string ConfigString;
+	private int StartingLimit;
 
 	Default
 	{

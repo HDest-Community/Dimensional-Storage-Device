@@ -1,6 +1,8 @@
 ### Notes
 ---
 - Loadout code is `dsd`.
+- Configuration codes are:
+	- `limit`: overrides the starting storage limit.
 - Some HDPickup items cannot be inserted into the backpack. That is intentional as there is no way to save some variables, which results in various exploits caused by packing and unpacking an item.
 - Each player gets their own storage.
 - Order of items is First-In-First-Out. New items are put at the end of the list.
