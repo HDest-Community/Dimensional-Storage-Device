@@ -138,7 +138,7 @@ class DSDStorage : ItemStorage
 			{
 				return IType_Invalid;
 			}
-			if (wpn && !wpn.bNOINTERACTION && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON)
+			if (wpn && !wpn.bNOINTERACTION && !wpn.bCHEATNOTWEAPON)
 			{
 				return IType_Weapon;
 			}
@@ -162,7 +162,7 @@ class DSDStorage : ItemStorage
 			let mag = cls is 'HDMagAmmo' ? GetDefaultByType((class<HDMagAmmo>)(cls)) : null;
 			let pkp = cls is 'HDPickup' ? GetDefaultByType((class<HDPickup>)(cls)) : null;
 
-			if (wpn && !wpn.bNOINTERACTION && !wpn.bDONTNULL && !wpn.bCHEATNOTWEAPON && wpn.GetTag() != wpn.GetClassName())
+			if (wpn && !wpn.bNOINTERACTION && !wpn.bCHEATNOTWEAPON && wpn.GetTag() != wpn.GetClassName())
 			{
 				return IType_Weapon;
 			}
