@@ -389,7 +389,7 @@ class DSDInterface : HDBackpack
 		StartingCapacity = GetLoadoutVar(input, "cap", 5);
 	}
 	override bool CanGrabInsert(Inventory item, class<Inventory> item, Actor grabber) { return false; }
-	override bool IsBeingWorn() { return true; }
+	override bool IsBeingWorn() { return false; }
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk()
 	{
@@ -528,6 +528,7 @@ class DSDInterface : HDBackpack
 		-HDWEAPON.FITSINBACKPACK
 		+HDWEAPON.ALWAYSSHOWSTATUS
 		+HDWEAPON.IGNORELOADOUTAMOUNT
+		HDWeapon.WornLayer 0;
 		Weapon.SelectionOrder 1010;
 		Inventory.Icon "DSDDA0";
 		Inventory.PickupMessage "Picked up a Dimensional Storage Device(tm). For the hoard!";
