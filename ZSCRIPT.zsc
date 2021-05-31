@@ -575,7 +575,7 @@ class DSDInterface : HDBackpack
 					}
 					InputAmount += (JustPressed(BT_ATTACK) ? 1 : JustPressed(BT_ALTATTACK) ? -1 : 0);
 					HijackMouse();
-					invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount, 1, 30);
+					invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount, 1, 100);
 				}
 				else
 				{
