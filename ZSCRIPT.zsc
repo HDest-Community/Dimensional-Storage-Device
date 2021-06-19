@@ -375,6 +375,11 @@ class DSDInterface : HDBackpack
 
 		if (ConfigString != "")
 		{
+			// [Ace] Remove the dot after 'dsd', if any.
+			if (ConfigString.ByteAt(0) == 46)
+			{
+				ConfigString = ConfigString.Mid(1);
+			}
 			Super.LoadoutConfigure(ConfigString);
 			ConfigString = "";
 		}
