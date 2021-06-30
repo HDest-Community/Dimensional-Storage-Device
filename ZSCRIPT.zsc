@@ -566,21 +566,12 @@ class DSDInterface : HDBackpack
 				if (PressingFiremode())
 				{
 					// [Ace] This code is copy-pasted from HD and I have no idea what all them bitshifts are supposed to do or why they're used in the first place.
-					int InputAmount = player.cmd.pitch;
-					if(InputAmount)
+					int InputAmount = GetMouseY(true);
+					if (InputAmount != 0)
 					{
-						if(abs(InputAmount) < (1 << 7))
-						{
-							InputAmount = clamp(InputAmount, -1, 1);
-						}
-						else
-						{
-							InputAmount >>= 7;
-						}
+						invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount, 1, 100);
 					}
-					InputAmount += (JustPressed(BT_ATTACK) ? 1 : JustPressed(BT_ALTATTACK) ? -1 : 0);
-					HijackMouse();
-					invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount, 1, 100);
+					
 				}
 				else
 				{
