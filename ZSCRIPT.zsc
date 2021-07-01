@@ -565,13 +565,11 @@ class DSDInterface : HDBackpack
 			{
 				if (PressingFiremode())
 				{
-					// [Ace] This code is copy-pasted from HD and I have no idea what all them bitshifts are supposed to do or why they're used in the first place.
 					int InputAmount = GetMouseY(true);
 					if (InputAmount != 0)
 					{
 						invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount / 20, 1, 100);
 					}
-					
 				}
 				else
 				{
