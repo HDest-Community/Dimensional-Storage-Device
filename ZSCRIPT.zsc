@@ -565,6 +565,15 @@ class DSDInterface : HDBackpack
 			{
 				if (PressingFiremode())
 				{
+					if (JustPressed(BT_ATTACK))
+					{
+						invoker.OperationAmount++;
+					}
+					else if (JustPressed(BT_ALTATTACK))
+					{
+						invoker.OperationAmount--;
+					}
+
 					int InputAmount = GetMouseY(true);
 					if (InputAmount != 0)
 					{
