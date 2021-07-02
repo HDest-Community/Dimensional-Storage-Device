@@ -575,7 +575,6 @@ class DSDInterface : HDBackpack
 					}
 
 					int InputAmount = GetMouseY(true);
-					Console.Printf("%i", InputAmount);
 					if (InputAmount != 0)
 					{
 						invoker.OperationAmount = clamp(invoker.OperationAmount + InputAmount / 64, 1, 100);
