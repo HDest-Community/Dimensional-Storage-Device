@@ -168,7 +168,7 @@ class DSDStorage : ItemStorage
 			}
 			if (arm && arm.GetTag() != arm.GetClassName())
 			{
-				return IType_Armor;
+				return IType_Armour;
 			}
 			if (mag && mag.GetTag() != mag.GetClassName())
 			{
