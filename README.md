@@ -6,5 +6,5 @@
 - Some HDPickup items cannot be inserted into the backpack. That is intentional as there is no way to save some variables, which results in various exploits caused by packing and unpacking an item.
 - Each player gets their own storage.
 - Order of items is First-In-First-Out. New items are put at the end of the list.
-- The device weighs 10% of what's in the storage. Don't ask me how that works or why. It's an AceCorp secret. Something with dimensional energies leaking through the device, I don't know, I don't get paid to write technical specifications.
+- The device's bulk scales up depending on how full it is, regardless of capacity. Don't ask me how that works or why. I don't know either.
 - The device itself does not hold any items. Meaning two different devices will point to the same storage.

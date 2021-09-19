@@ -398,7 +398,7 @@ class DSDInterface : HDBackpack
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk()
 	{
-		return 80 + (Storage ? Storage.TotalBulk * 0.10 : 0);
+		return 50 + 950 * (Storage ? Storage.TotalBulk / Storage.MaxBulk : 0);
 	}
 
 	override string GetHelpText()
