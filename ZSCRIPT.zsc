@@ -345,7 +345,7 @@ class DSDStorageThinker : Thinker
 		thkr.ChangeStatNum(STAT_STATIC);
 		thkr.TrackedPlayer = num;
 		thkr.Storage = new('DSDStorage');
-		thkr.Storage.MaxBulk = 2000;
+		thkr.Storage.MaxBulk = 1000;
 		return thkr.Storage;
 	}
 
@@ -513,7 +513,7 @@ class DSDInterface : HDBackpack
 		{
 			other.A_StartSound("weapons/pocket");
 			other.A_Log("Your storage has expanded.", true);
-			DSD.Storage.MaxBulk += 1000;
+			DSD.Storage.MaxBulk += 500;
 			Destroy();
 			return;
 		}
