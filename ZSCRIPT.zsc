@@ -245,10 +245,10 @@ class DSDStorage : ItemStorage
 				}
 			}
 		}
-		else if (arm)
+		else if (mag || arm)
 		{
 			index = min(index, item.Amounts.Size() - 1);
-			amt = min(amt, 1, item.Amounts.Size());
+			amt = min(arm ? 1 : amt, item.Amounts.Size());
 			if (remover && !(flags & BF_FROMCONSOLIDATE))
 			{
 				Actor.Spawn("DSDSpawnEffect", SpawnPos);
@@ -257,38 +257,15 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					Spawned = Inventory(Actor.Spawn(arm, SpawnPos));
-					HDArmour newarm = HDArmour(Spawned);
-					newarm.Mags[0] = item.Amounts[0];
-					newarm.angle = random(0, 359);
-					newarm.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
-				}
-				if (item.Icons.Size() > 1)
-				{
-					item.Icons.Delete(index);
-				}
-				item.Bulks.Delete(index);
-				item.Amounts.Delete(index);
-			}
-
-		}
-		else if (mag) // [Ace] Same shite. Mags and armor aren't in the same condition because of how icons are handled. I'd like to keep them separate.
-		{
-			index = min(index, item.Amounts.Size() - 1);
-			amt = min(amt, item.Amounts.Size());
-			if (remover && !(flags & BF_FROMCONSOLIDATE))
-			{
-				Actor.Spawn("DSDSpawnEffect", SpawnPos);
-			}
-			for (int i = 0; i < amt; ++i)
-			{
-				if (remover)
-				{
-					Spawned = Inventory(Actor.Spawn(mag, SpawnPos));
+					Spawned = Inventory(Actor.Spawn(arm ? (class<HDMagAmmo>)(arm) : mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(Spawned);
 					newmag.Mags.Push(item.Amounts[0]);
 					newmag.angle = random(0, 359);
 					newmag.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
+				}
+				if (item.Icons.Size() > 1)
+				{
+					item.Icons.Delete(index);
 				}
 				item.Bulks.Delete(index);
 				item.Amounts.Delete(index);
@@ -485,7 +462,7 @@ class DSDInterface : HDBackpack
 			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 			{
 				vector2 Off = (-126 + 50 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
-				sb.DrawImage(SelItem.Icons[0], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
+				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
 
 				int MagAmt = SelItem.Amounts[i];
 				if (MagAmt == 51 && SelItem.ItemClass is 'HD4mMag')
