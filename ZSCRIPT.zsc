@@ -259,7 +259,8 @@ class DSDStorage : ItemStorage
 				{
 					Spawned = Inventory(Actor.Spawn(arm ? (class<HDMagAmmo>)(arm) : mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(Spawned);
-					newmag.Mags.Push(item.Amounts[0]);
+					newmag.SyncAmount();
+					newmag.Mags[0] = item.Amounts[index];
 					newmag.angle = random(0, 359);
 					newmag.A_ChangeVelocity(frandom(-0.1, 0.4), 0, frandom(0, 3), CVF_RELATIVE);
 				}
