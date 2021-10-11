@@ -486,16 +486,15 @@ class DSDInterface : HDBackpack
 
 	override void ActualPickup(Actor other, bool silent)
 	{
-		let DSD = DSDInterface(other.FindInventory("DSDInterface"));
-		if (DSD && DSD.Storage)
+		if (other.player && other.player.cmd.buttons & BT_ZOOM && other.player.cmd.buttons & BT_FIREMODE)
 		{
 			other.A_StartSound("weapons/pocket");
 			other.A_Log("Your storage has expanded.", true);
-			DSD.Storage.MaxBulk += 500;
+			Storage = DSDStorageThinker.Get(other.PlayerNumber());
+			Storage.MaxBulk += 500;
 			Destroy();
 			return;
 		}
-		
 		Super.ActualPickup(other, silent);
 	}
 

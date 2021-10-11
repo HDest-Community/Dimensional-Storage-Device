@@ -8,3 +8,4 @@
 - Order of items is First-In-First-Out. New items are put at the end of the list.
 - The device's bulk scales up depending on how full it is, regardless of capacity. Don't ask me how that works or why. I don't know either.
 - The device itself does not hold any items. Meaning two different devices will point to the same storage.
+- To expand your storage, hold Zoom and Firemode when picking up a DSD to consume the item and gain extra storage.
