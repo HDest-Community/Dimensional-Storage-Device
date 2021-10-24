@@ -461,11 +461,6 @@ class DSDInterface : HDBackpack
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
 		}
 
-		if (DSDStorage(Storage).InSearchMode)
-		{
-			sb.DrawString(sb.pSmallFont, "Searching: "..DSDStorage(Storage).SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
-		}
-
 		if (SelItem.ItemClass is 'HDArmour')
 		{
 			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
@@ -502,6 +497,11 @@ class DSDInterface : HDBackpack
 				vector2 Off = (-120 + 60 * ((i - 1) % 5), BaseOffset + 110 + 30 * ((i - 1) / 5));
 				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
 			}
+		}
+
+		if (DSDStorage(Storage).InSearchMode)
+		{
+			sb.DrawString(sb.pSmallFont, "Searching: "..DSDStorage(Storage).SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
 		}
 	}
 
