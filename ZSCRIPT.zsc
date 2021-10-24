@@ -461,11 +461,16 @@ class DSDInterface : HDBackpack
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
 		}
 
+		if (DSDStorage(Storage).InSearchMode)
+		{
+			sb.DrawString(sb.pSmallFont, "Searching: "..DSDStorage(Storage).SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
+		}
+
 		if (SelItem.ItemClass is 'HDArmour')
 		{
 			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
 			{
-				vector2 Off = (-126 + 35 * (i % 8), BaseOffset + 110 + 35 * (i / 8));
+				vector2 Off = (-126 + 35 * (i % 8), BaseOffset + 120 + 35 * (i / 8));
 				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (30, 20), (4.0, 4.0));
 				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i] > 1000 ? SelItem.Amounts[i] - 1000 : SelItem.Amounts[i], 1, 4), Off + (0, 12), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_YELLOW);
 			}
@@ -475,7 +480,7 @@ class DSDInterface : HDBackpack
 			int size = SelItem.Amounts.Size();
 			for (int i = 0; i < size; ++i)
 			{
-				vector2 off = (-160 + 42 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
+				vector2 off = (-160 + 42 * (i / 10) - 2 * i, BaseOffset + 120 + 12 * (i % 10));
 				sb.DrawImage(SelItem.Icons[i], off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
 			}
 			for (int i = 0; i < size; ++i)
@@ -485,7 +490,7 @@ class DSDInterface : HDBackpack
 				{
 					magAmt = 50;
 				}
-				vector2 off = (-160 + 42 * (i / 10) - 2 * i, BaseOffset + 110 + 12 * (i % 10));
+				vector2 off = (-160 + 42 * (i / 10) - 2 * i, BaseOffset + 120 + 12 * (i % 10));
 				sb.DrawString(sb.mAmountFont, sb.FormatNumber(magAmt, 1, 4), off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
 			}
 		}
@@ -494,14 +499,9 @@ class DSDInterface : HDBackpack
 			// [Ace] Don't display the first weapon. It's already in the preview.
 			for (int i = 1; i < SelItem.Amounts[0]; ++i)
 			{
-				vector2 Off = (-120 + 60 * ((i - 1) % 5), BaseOffset + 110 + 30 * ((i - 1) / 5));
+				vector2 Off = (-120 + 60 * ((i - 1) % 5), BaseOffset + 120 + 30 * ((i - 1) / 5));
 				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
 			}
-		}
-
-		if (DSDStorage(Storage).InSearchMode)
-		{
-			sb.DrawString(sb.pSmallFont, "Searching: "..DSDStorage(Storage).SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
 		}
 	}
 
