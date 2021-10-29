@@ -228,7 +228,7 @@ class DSDStorage : ItemStorage
 		if (wpn)
 		{
 			index = min(index, item.Amounts.Size() - 1);
-			amt = min(amt, item.Amounts[0]);
+			amt = min(1, amt, item.Amounts[0]);
 			if (remover && !(flags & BF_FROMCONSOLIDATE))
 			{
 				Actor.Spawn("DSDSpawnEffect", SpawnPos);
