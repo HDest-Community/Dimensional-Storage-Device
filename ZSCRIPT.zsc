@@ -55,6 +55,13 @@ class DSDHandler : EventHandler
 			DSD.SearchString = DSD.SearchString..String.Format("%c", e.Args[0]);
 			return;
 		}
+
+		// [Ace] This is cheating.
+		if (e.Name ~== "DSD_SetCapacity" && sv_cheats)
+		{
+			DSD.MaxBulk = max(1000, e.Args[0]);
+			return;
+		}
 	}
 
 	override bool InputProcess(InputEvent e)
