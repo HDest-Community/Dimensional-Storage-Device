@@ -149,6 +149,19 @@ class DSDStorage : ItemStorage
 		return "Your storage is full.";
 	}
 
+	override int GetOperationSpeed(class<Inventory> item, int operation)
+	{
+		let wpn = (class<HDWeapon>)(item);
+		let pkp = (class<HDPickup>)(item);
+		bool multipickup = pkp && GetDefaultByType(pkp).bMULTIPICKUP;
+		switch (operation)
+		{
+			case SIIAct_Extract: return wpn ? 10 : multipickup ? 5 : 6;
+			case SIIAct_Insert: return wpn ? 12 : multipickup ? 3 : 10;
+		}
+		return 10;
+	}
+
 	override int CheckConditions(Inventory item, class<Inventory> cls)
 	{
 		if (item)
@@ -611,7 +624,7 @@ class DSDInterface : HDBackpack
 							if (SelItem)
 							{
 								invoker.Storage.TryInsertItem(SelItem.InvRef, self, invoker.OperationAmount);
-								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, true);
+								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, SIIAct_Insert);
 							}
 						}
 						else if (PressingUnload())
@@ -621,7 +634,7 @@ class DSDInterface : HDBackpack
 							if (SelItem)
 							{
 								invoker.Storage.RemoveItem(SelItem, self, null, invoker.OperationAmount);
-								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, false);
+								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, SIIAct_Extract);
 							}
 						}
 					}
