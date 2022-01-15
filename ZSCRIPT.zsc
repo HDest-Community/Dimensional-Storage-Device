@@ -564,7 +564,7 @@ class DSDInterface : HDBackpack
 	States
 	{
 		Spawn:
-			DSDD A -1;
+			DSDD A -1 Light("DSDLight");
 			Stop;
 		Select0:
 			TNT1 A 1
