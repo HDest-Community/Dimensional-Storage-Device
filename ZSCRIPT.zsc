@@ -422,7 +422,8 @@ class DSDInterface : HDBackpack
 		..WEPHELP_FIREMODE.."+"..WEPHELP_UPDOWN.."  Adjust operation amount\n"
 		..WEPHELP_RELOAD.."  Insert\n"
 		..WEPHELP_UNLOAD.."  Remove\n"
-		..WEPHELP_BTCOL.."Enter"..WEPHELP_RGCOL.."  Search mode/apply search";
+		..WEPHELP_BTCOL.."Enter"..WEPHELP_RGCOL.."  Search mode/apply search\n"
+		..WEPHELP_ALTRELOAD.."(+"..WEPHELP_USE..")  Sort descending/ascending";
 	}
 
 	override void DrawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl)
@@ -440,8 +441,8 @@ class DSDInterface : HDBackpack
 			return;
 		}
 		
-		StorageItem SelItem = Storage.GetSelectedItem();
-		if (!SelItem)
+		StorageItem selItem = Storage.GetSelectedItem();
+		if (!selItem)
 		{
 			return;
 		}
@@ -468,15 +469,15 @@ class DSDInterface : HDBackpack
 			sb.DrawImage(CurItem.Icons[0], (Offset.x, BaseOffset + 40 + Offset.y), sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, CenterItem && !CurItem.HaveNone() ? 1.0 : 0.6, CenterItem ? (50, 30) : (30, 20), GetDefaultByType(CurItem.ItemClass).Scale * (CenterItem ? 4.0 : 3.0));
 		}
 		
-		sb.DrawString(sb.pSmallFont, SelItem.NiceName, (0, BaseOffset + 60), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_FIRE);
+		sb.DrawString(sb.pSmallFont, selItem.NiceName, (0, BaseOffset + 60), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_FIRE);
 
-		int AmountInBackpack = SelItem.ItemClass is 'HDMagAmmo' ? SelItem.Amounts.Size() : (SelItem.Amounts.Size() > 0 ? SelItem.Amounts[0] : 0);
+		int AmountInBackpack = selItem.ItemClass is 'HDMagAmmo' ? selItem.Amounts.Size() : (selItem.Amounts.Size() > 0 ? selItem.Amounts[0] : 0);
 		sb.DrawString(sb.pSmallFont, "In backpack:  "..sb.FormatNumber(AmountInBackpack, 1, 6), (0, BaseOffset + 70), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, AmountInBackpack > 0 ? Font.CR_BROWN : Font.CR_DARKBROWN);
 
-		int AmountOnPerson = GetAmountOnPerson(hpl.FindInventory(SelItem.ItemClass));
+		int AmountOnPerson = GetAmountOnPerson(hpl.FindInventory(selItem.ItemClass));
 		sb.DrawString(sb.pSmallFont, "On person:  "..sb.FormatNumber(AmountOnPerson, 1, 6), (0, BaseOffset + 78), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, AmountOnPerson > 0 ?  Font.CR_WHITE : Font.CR_DARKGRAY);
 
-		if (SelItem.ItemClass is 'HDPickup' && !(SelItem.ItemClass is 'HDArmour'))
+		if (selItem.ItemClass is 'HDPickup' && !(selItem.ItemClass is 'HDArmour'))
 		{
 			sb.DrawString(sb.pSmallFont, "Insert/remove:  "..sb.FormatNumber(OperationAmount, 1, 3), (0, BaseOffset + 86), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_SAPPHIRE);
 		}
@@ -486,27 +487,27 @@ class DSDInterface : HDBackpack
 			sb.DrawString(sb.pSmallFont, "Searching: "..DSDStorage(Storage).SearchString.."_", (-60, BaseOffset + 94), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
 		}
 
-		if (SelItem.ItemClass is 'HDArmour')
+		if (selItem.ItemClass is 'HDArmour')
 		{
-			for (int i = 0; i < SelItem.Amounts.Size(); ++i)
+			for (int i = 0; i < selItem.Amounts.Size(); ++i)
 			{
 				vector2 Off = (-126 + 35 * (i % 8), BaseOffset + 120 + 35 * (i / 8));
-				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (30, 20), (4.0, 4.0));
-				sb.DrawString(sb.mAmountFont, sb.FormatNumber(SelItem.Amounts[i] > 1000 ? SelItem.Amounts[i] - 1000 : SelItem.Amounts[i], 1, 4), Off + (0, 12), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_YELLOW);
+				sb.DrawImage(selItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (30, 20), (4.0, 4.0));
+				sb.DrawString(sb.mAmountFont, sb.FormatNumber(selItem.Amounts[i] > 1000 ? selItem.Amounts[i] - 1000 : selItem.Amounts[i], 1, 4), Off + (0, 12), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_YELLOW);
 			}
 		}
-		else if (SelItem.ItemClass is 'HDMagAmmo' && !(SelItem.ItemClass is 'HDInjectorMaker' && GetDefaultByType((class<HDMagAmmo>)(SelItem.ItemClass)).MaxPerUnit == 0))
+		else if (selItem.ItemClass is 'HDMagAmmo' && !(selItem.ItemClass is 'HDInjectorMaker' && GetDefaultByType((class<HDMagAmmo>)(selItem.ItemClass)).MaxPerUnit == 0))
 		{
-			int size = SelItem.Amounts.Size();
+			int size = selItem.Amounts.Size();
 			for (int i = 0; i < size; ++i)
 			{
 				vector2 off = (-160 + 42 * (i / 10) - 2 * i, BaseOffset + 120 + 12 * (i % 10));
-				sb.DrawImage(SelItem.Icons[i], off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
+				sb.DrawImage(selItem.Icons[i], off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, OperationAmount > i ? 1.0 : 0.5, (10, 20), (4.0, 4.0));
 			}
 			for (int i = 0; i < size; ++i)
 			{
-				int magAmt = SelItem.Amounts[i];
-				if (magAmt == 51 && SelItem.ItemClass is 'HD4mMag')
+				int magAmt = selItem.Amounts[i];
+				if (magAmt == 51 && selItem.ItemClass is 'HD4mMag')
 				{
 					magAmt = 50;
 				}
@@ -514,13 +515,13 @@ class DSDInterface : HDBackpack
 				sb.DrawString(sb.mAmountFont, sb.FormatNumber(magAmt, 1, 4), off + (5, 3), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_LEFT, Font.CR_YELLOW, OperationAmount > i ? 1.0 : 0.5);
 			}
 		}
-		else if (SelItem.ItemClass is 'HDWeapon' && SelItem.Amounts.Size() > 0 && SelItem.Amounts[0] > 1)
+		else if (selItem.ItemClass is 'HDWeapon' && selItem.Amounts.Size() > 0 && selItem.Amounts[0] > 1)
 		{
 			// [Ace] Don't display the first weapon. It's already in the preview.
-			for (int i = 1; i < SelItem.Amounts[0]; ++i)
+			for (int i = 1; i < selItem.Amounts[0]; ++i)
 			{
 				vector2 Off = (-120 + 60 * ((i - 1) % 5), BaseOffset + 120 + 30 * ((i - 1) / 5));
-				sb.DrawImage(SelItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
+				sb.DrawImage(selItem.Icons[i], Off, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, 1.0, (50, 20), (4.0, 4.0));
 			}
 		}
 	}
@@ -537,6 +538,28 @@ class DSDInterface : HDBackpack
 			return;
 		}
 		Super.ActualPickup(other, silent);
+	}
+
+	private action void A_Sort(bool ascending)
+	{
+		A_UpdateStorage();
+		StorageItem selItem = invoker.Storage.GetSelectedItem();
+		int size = selItem.Amounts.Size();
+		if (size > 1) // [Ace] It's a mag.
+		{
+			for (int i = 0; i < size - 1; ++i)
+			{
+				for (int j = i + 1; j < size; ++j)
+				{
+					if (!ascending && selItem.Amounts[i] > selItem.Amounts[j] || ascending && selItem.Amounts[i] < selItem.Amounts[j])
+					{
+						let swpAmt = selItem.Amounts[i]; selItem.Amounts[i] = selItem.Amounts[j]; selItem.Amounts[j] = swpAmt; 
+						let swpBulk = selItem.Bulks[i]; selItem.Bulks[i] = selItem.Bulks[j]; selItem.Bulks[j] = swpBulk; 
+						let swpIcon = selItem.Icons[i]; selItem.Icons[i] = selItem.Icons[j]; selItem.Icons[j] = swpIcon; 
+					}
+				}
+			}
+		}
 	}
 
 	private int OperationAmount;
@@ -604,6 +627,10 @@ class DSDInterface : HDBackpack
 				{
 					invoker.RepeatTics--;
 					A_WeaponReady(WRF_ALLOWUSER3);
+					if (JustPressed(BT_ALTRELOAD))
+					{
+						A_Sort(PressingUse());
+					}
 					if (JustPressed(BT_ATTACK))
 					{
 						A_UpdateStorage();
@@ -620,21 +647,21 @@ class DSDInterface : HDBackpack
 						if (PressingReload())
 						{
 							A_UpdateStorage();
-							StorageItem SelItem = invoker.Storage.GetSelectedItem();
-							if (SelItem)
+							StorageItem selItem = invoker.Storage.GetSelectedItem();
+							if (selItem)
 							{
-								invoker.Storage.TryInsertItem(SelItem.InvRef, self, invoker.OperationAmount);
-								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, SIIAct_Insert);
+								invoker.Storage.TryInsertItem(selItem.InvRef, self, invoker.OperationAmount);
+								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(selItem.ItemClass, SIIAct_Insert);
 							}
 						}
 						else if (PressingUnload())
 						{
 							A_UpdateStorage();
-							StorageItem SelItem = invoker.Storage.GetSelectedItem();
-							if (SelItem)
+							StorageItem selItem = invoker.Storage.GetSelectedItem();
+							if (selItem)
 							{
-								invoker.Storage.RemoveItem(SelItem, self, null, invoker.OperationAmount);
-								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(SelItem.ItemClass, SIIAct_Extract);
+								invoker.Storage.RemoveItem(selItem, self, null, invoker.OperationAmount);
+								invoker.RepeatTics = invoker.Storage.GetOperationSpeed(selItem.ItemClass, SIIAct_Extract);
 							}
 						}
 					}
