@@ -371,7 +371,8 @@ class DSDInterface : HDBackpack
 {
 	enum DSDProperties
 	{
-		DSDProp_Flags
+		DSDProp_Flags,
+		DSDProp_ExtraPoints
 	}
 
 	override void AttachToOwner(Actor other)
@@ -397,6 +398,16 @@ class DSDInterface : HDBackpack
 			Super.LoadoutConfigure(ConfigString);
 			ConfigString = "";
 		}
+	}
+
+	override void Tick()
+	{
+		if (Storage && WeaponStatus[DSDProp_ExtraPoints] > 0)
+		{
+			Storage.MaxBulk += 500 * WeaponStatus[DSDProp_ExtraPoints];
+			WeaponStatus[DSDProp_ExtraPoints] = 0;
+		}
+		Super.Tick();
 	}
 
 	override void UpdateCapacity() {}
