@@ -441,7 +441,7 @@ class DSDInterface : HDBackpack
 		int BaseOffset = -80;
 
 		sb.DrawString(sb.pSmallFont, "\c[DarkBrown][] [] [] \c[Cyan]Dimensional Storage Device \c[DarkBrown][] [] []", (0, BaseOffset), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
-		sb.DrawString(sb.pSmallFont, "Total Bulk: \cf"..int(Storage.TotalBulk).."/"..int(Storage.MaxBulk).."\c-", (0, BaseOffset + 10), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
+		sb.DrawString(sb.pSmallFont, String.Format("Total Bulk: \cf%.2f/%i\c-", Storage.TotalBulk, Storage.MaxBulk), (0, BaseOffset + 10), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER);
 
 		int ItemCount = Storage.Items.Size();
 
