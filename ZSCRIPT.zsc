@@ -220,9 +220,19 @@ class DSDStorage : ItemStorage
 		return IType_Invalid;
 	}
 
+	override int TryInsertItem(Inventory item, Actor inserter, int amt, int index, bool noInsert, int flags)
+	{
+		if (flags & BF_FROMMANAGER)
+		{
+			return 0;
+		}
+		
+		return Super.TryInsertItem(item, inserter, amt, index, noInsert, flags);
+	}
+
 	override Inventory RemoveItem(StorageItem item, Actor remover, Actor receiver, int amt, int index, int flags)
 	{
-		if (!item || item.Amounts.Size() == 0 || amt < 1)
+		if (!item || item.Amounts.Size() == 0 || amt < 1 || flags & BF_FROMMANAGER)
 		{
 			return null;
 		}
