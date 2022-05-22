@@ -561,6 +561,10 @@ class DSDInterface : HDBackpack
 			other.A_Log("Your storage has expanded.", true);
 			Storage = DSDStorageThinker.Get(other.PlayerNumber());
 			Storage.MaxBulk += 500;
+			if (WeaponStatus[DSDProp_Battery] >= 0)
+			{
+				HDMagAmmo.GiveMag(other, 'HDBattery', WeaponStatus[DSDProp_Battery]);
+			}
 			Destroy();
 			return;
 		}
