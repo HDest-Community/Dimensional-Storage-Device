@@ -662,7 +662,7 @@ class DSDInterface : HDBackpack
 						invoker.OperationAmount += int(ceil(InputAmount / 64.0));
 					}
 
-					invoker.OperationAmount = clamp(invoker.OperationAmount, 1, 100);
+					invoker.OperationAmount = clamp(invoker.OperationAmount, 1, 200);
 				}
 				else
 				{
