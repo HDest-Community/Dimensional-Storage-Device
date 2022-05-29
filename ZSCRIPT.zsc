@@ -434,6 +434,11 @@ class DSDInterface : HDBackpack
 	override string, double GetPickupSprite(){ return "DSDDA0", 1.0; }
 	override double WeaponBulk() { return 60; }
 
+	override void InitializeWepStats(bool idfa)
+	{
+		WeaponStatus[DSDProp_Battery] = -1;
+	}
+
 	override string GetHelpText()
 	{
 		return WEPHELP_FIRE.."/"..WEPHELP_ALTFIRE.."  Previous/Next item\n"
