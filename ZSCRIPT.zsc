@@ -22,6 +22,15 @@ class DSDHandler : EventHandler
 		}
 	}
 
+	override void WorldThingSpawned(WorldEvent e)
+	{
+		HDBattery bat = HDBattery(e.Thing);
+		if (bat)
+		{
+			bat.ItemsThatUseThis.Push("DSDInterface");
+		}
+	}
+
 	override void PlayerEntered(PlayerEvent e)
 	{
 		Storages[e.PlayerNumber] = DSDStorageThinker.Get(e.PlayerNumber);
