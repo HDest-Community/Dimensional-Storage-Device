@@ -176,7 +176,7 @@ class DSDStorage : ItemStorage
 		if (item)
 		{
 			let wpn = HDWeapon(item);
-			let arm = HDArmour(item);
+			//let arm = HDArmour(item);
 			let mag = HDMagAmmo(item);
 			let pkp = HDPickup(item);
 
@@ -188,10 +188,12 @@ class DSDStorage : ItemStorage
 			{
 				return IType_Weapon;
 			}
+			/*
 			if (arm)
 			{
 				return IType_Armour;
 			}
+			*/
 			if (mag)
 			{
 				return IType_Mag;
@@ -204,7 +206,7 @@ class DSDStorage : ItemStorage
 		else if (cls)
 		{
 			let wpn = cls is 'HDWeapon' ? GetDefaultByType((class<HDWeapon>)(cls)) : null;
-			let arm = cls is 'HDArmour' ? GetDefaultByType((class<HDArmour>)(cls)) : null;
+			//let arm = cls is 'HDArmour' ? GetDefaultByType((class<HDArmour>)(cls)) : null;
 			let mag = cls is 'HDMagAmmo' ? GetDefaultByType((class<HDMagAmmo>)(cls)) : null;
 			let pkp = cls is 'HDPickup' ? GetDefaultByType((class<HDPickup>)(cls)) : null;
 
@@ -212,10 +214,12 @@ class DSDStorage : ItemStorage
 			{
 				return IType_Weapon;
 			}
+			/*
 			if (arm && arm.GetTag() != arm.GetClassName())
 			{
 				return IType_Armour;
 			}
+			*/
 			if (mag && mag.GetTag() != mag.GetClassName())
 			{
 				return IType_Mag;
@@ -229,25 +233,28 @@ class DSDStorage : ItemStorage
 		return IType_Invalid;
 	}
 
+	/*
 	override int TryInsertItem(Inventory item, Actor inserter, int amt, int index, bool noInsert, int flags)
 	{
-		if (flags & BF_FROMMANAGER)
+		if (flags & bFITSINBACKPACK)
+		//if (flags & BF_FROMMANAGER)
 		{
 			return 0;
 		}
 		
 		return Super.TryInsertItem(item, inserter, amt, index, noInsert, flags);
 	}
-
+	*/
 	override Inventory RemoveItem(StorageItem item, Actor remover, Actor receiver, int amt, int index, int flags)
 	{
-		if (!item || item.Amounts.Size() == 0 || amt < 1 || flags & BF_FROMMANAGER)
+		if (!item || item.Amounts.Size() == 0 || amt < 1)
+		//if (!item || item.Amounts.Size() == 0 || amt < 1 || flags & bFITSINBACKPACK)
 		{
 			return null;
 		}
 
 		let wpn = (class<HDWeapon>)(item.ItemClass);
-		let arm = (class<HDArmour>)(item.ItemClass);
+		//let arm = (class<HDArmour>)(item.ItemClass);
 		let mag = (class<HDMagAmmo>)(item.ItemClass);
 		let pkp = (class<HDPickup>)(item.ItemClass);
 
@@ -301,10 +308,11 @@ class DSDStorage : ItemStorage
 				}
 			}
 		}
-		else if (mag || arm)
+		else if (mag)// || arm)
 		{
 			index = min(index, item.Amounts.Size() - 1);
-			amt = min(arm ? 1 : amt, item.Amounts.Size());
+			amt = min(1, amt, item.Amounts[0]);
+			//amt = min(arm ? 1 : amt, item.Amounts.Size());
 			if (remover && !(flags & BF_FROMCONSOLIDATE))
 			{
 				Actor.Spawn("DSDSpawnEffect", SpawnPos);
@@ -313,7 +321,8 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					spawned = Inventory(Actor.Spawn(arm ? (class<HDMagAmmo>)(arm) : mag, SpawnPos));
+					spawned = Inventory(Actor.Spawn(wpn, SpawnPos));
+					//spawned = Inventory(Actor.Spawn(arm ? (class<HDMagAmmo>)(arm) : mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(spawned);
 					newmag.Mags[0] = item.Amounts[index];
 					newmag.angle = random(0, 359);
