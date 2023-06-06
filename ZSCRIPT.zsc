@@ -165,10 +165,10 @@ class DSDStorage : ItemStorage
 		bool multipickup = pkp && GetDefaultByType(pkp).bMULTIPICKUP;
 		switch (operation)
 		{
-			case SIIAct_Extract: return wpn ? 10 : multipickup ? 6 : 6;
-			case SIIAct_Insert: return wpn ? 10 : multipickup ? 6 : 6;
+			case SIIAct_Extract: return wpn ? 20 : multipickup ? 6 : 6;
+			case SIIAct_Insert: return wpn ? 20 : multipickup ? 6 : 6;
 		}
-		return 10;
+		return 20;
 	}
 
 	override int CheckConditions(Inventory item, class<Inventory> cls)
@@ -176,7 +176,7 @@ class DSDStorage : ItemStorage
 		if (item)
 		{
 			let wpn = HDWeapon(item);
-			//let arm = HDArmour(item);
+			let arm = HDArmour(item);
 			let mag = HDMagAmmo(item);
 			let pkp = HDPickup(item);
 
@@ -321,7 +321,7 @@ class DSDStorage : ItemStorage
 			{
 				if (remover)
 				{
-					spawned = Inventory(Actor.Spawn(wpn, SpawnPos));
+					spawned = Inventory(Actor.Spawn(mag, SpawnPos));
 					//spawned = Inventory(Actor.Spawn(arm ? (class<HDMagAmmo>)(arm) : mag, SpawnPos));
 					HDMagAmmo newmag = HDMagAmmo(spawned);
 					newmag.Mags[0] = item.Amounts[index];
@@ -489,7 +489,7 @@ class DSDInterface : HDBackpack
 		}
 		else
 		{
-			sb.DrawString(sb.pSmallFont, "\c[Brown]Operations left: \c-"..(WeaponStatus[DSDProp_Battery] / 2), (0, yOff + 20), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_GREEN);
+			sb.DrawString(sb.pSmallFont, "\c[Brown]Operations left: \c-"..(WeaponStatus[DSDProp_Battery]), (0, yOff + 20), sb.DI_SCREEN_CENTER | sb.DI_TEXT_ALIGN_CENTER, Font.CR_GREEN);
 		}
 
 		yOff += 40;
@@ -718,7 +718,7 @@ class DSDInterface : HDBackpack
 								}
 								return;
 							}
-							if (invoker.WeaponStatus[DSDProp_Battery] >= 2)
+							if (invoker.WeaponStatus[DSDProp_Battery] >= 1)
 							{
 								A_UpdateStorage();
 								StorageItem selItem = invoker.Storage.GetSelectedItem();
@@ -728,7 +728,7 @@ class DSDInterface : HDBackpack
 									invoker.RepeatTics = invoker.Storage.GetOperationSpeed(selItem.ItemClass, SIIAct_Insert);
 									if (inserted > 0)
 									{
-										invoker.WeaponStatus[DSDProp_Battery] -= 2;
+										invoker.WeaponStatus[DSDProp_Battery] -= 1;
 									}
 								}
 							}
@@ -743,7 +743,7 @@ class DSDInterface : HDBackpack
 								}
 								return;
 							}
-							if (invoker.WeaponStatus[DSDProp_Battery] >= 2)
+							if (invoker.WeaponStatus[DSDProp_Battery] >= 1)
 							{
 								A_UpdateStorage();
 								StorageItem selItem = invoker.Storage.GetSelectedItem();
@@ -753,7 +753,7 @@ class DSDInterface : HDBackpack
 									invoker.RepeatTics = invoker.Storage.GetOperationSpeed(selItem.ItemClass, SIIAct_Extract);
 									if (removed)
 									{
-										invoker.WeaponStatus[DSDProp_Battery] -= 2;
+										invoker.WeaponStatus[DSDProp_Battery] -= 1;
 									}
 								}
 							}
